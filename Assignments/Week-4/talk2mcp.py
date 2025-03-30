@@ -3,16 +3,47 @@ from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 import asyncio
-from google import genai
+import google.generativeai as genai
 from concurrent.futures import TimeoutError
 from functools import partial
+import subprocess
+import time
+from fastmcp import FastMCP
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Access your API key and initialize Gemini client correctly
 api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
+genai.configure(api_key=api_key)
+
+# Use the free model with safety settings
+model = genai.GenerativeModel('gemini-pro',
+    generation_config={
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 40,
+        "max_output_tokens": 2048,
+    },
+    safety_settings=[
+        {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "threshold": "BLOCK_NONE"
+        }
+    ]
+)
 
 max_iterations = 3
 last_response = None
@@ -28,10 +59,7 @@ async def generate_with_timeout(client, prompt, timeout=10):
         response = await asyncio.wait_for(
             loop.run_in_executor(
                 None, 
-                lambda: client.models.generate_content(
-                    model="gemini-2.0-flash",
-                    contents=prompt
-                )
+                lambda: model.generate_content(prompt)
             ),
             timeout=timeout
         )
@@ -117,30 +145,48 @@ async def main():
                 
                 print("Created system prompt...")
                 
-                system_prompt = f"""You are a math agent solving problems in iterations. You have access to various mathematical tools.
+                # System prompt for the agent
+                SYSTEM_PROMPT = """You are an autonomous agent that can perform mathematical calculations and display results using Preview on macOS. You have access to these tools:
 
-Available tools:
 {tools_description}
 
-You must respond with EXACTLY ONE line in one of these formats (no additional text):
-1. For function calls:
-   FUNCTION_CALL: function_name|param1|param2|...
-   
-2. For final answers:
-   FINAL_ANSWER: [number]
+Your task is to:
+1. Analyze the user's request carefully
+2. Plan the sequence of tool calls needed to fulfill the request
+3. Execute the tools in the correct order
+4. Display the final result in Preview
 
-Important:
-- When a function returns multiple values, you need to process all of them
-- Only give FINAL_ANSWER when you have completed all necessary calculations
-- Do not repeat function calls with the same parameters
+Important Guidelines:
+1. Tool Selection:
+   - For mathematical operations, use the appropriate calculation tools
+   - Always display final results in Preview using open_paint(), draw_rectangle(), and add_text_in_paint()
+   - Choose the most appropriate tool for each operation
+   - Consider the order of operations
 
-Examples:
-- FUNCTION_CALL: add|5|3
-- FUNCTION_CALL: strings_to_chars_to_int|INDIA
-- FINAL_ANSWER: [42]
+2. Response Format:
+   You must respond with EXACTLY ONE line in one of these formats (no additional text):
+   1. For function calls:
+      FUNCTION_CALL: function_name|param1|param2|...
+   2. For final answers:
+      FINAL_ANSWER: [message]
 
-DO NOT include any explanations or additional text.
-Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:"""
+   DO NOT include any explanations or additional text.
+   Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:
+
+3. Displaying Results:
+   - Always open Preview before drawing
+   - Draw a rectangle to frame the result
+   - Add the final answer as text inside the rectangle
+   - Use appropriate coordinates for the Preview window
+
+Remember:
+- You are autonomous - make decisions about which tools to use and when
+- Plan your sequence of operations before executing
+- Handle errors gracefully and provide clear feedback
+- Always ensure Preview is ready before drawing operations
+- Keep responses clean and format-compliant
+- Display all final results in Preview
+"""
 
                 query = """Find the ASCII values of characters in INDIA and then return sum of exponentials of those values. """
                 print("Starting iteration loop...")
@@ -158,9 +204,9 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
 
                     # Get model's response with timeout
                     print("Preparing to generate LLM response...")
-                    prompt = f"{system_prompt}\n\nQuery: {current_query}"
+                    prompt = f"{SYSTEM_PROMPT}\n\nQuery: {current_query}"
                     try:
-                        response = await generate_with_timeout(client, prompt)
+                        response = await generate_with_timeout(model, prompt)
                         response_text = response.text.strip()
                         print(f"LLM Response: {response_text}")
                         

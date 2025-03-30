@@ -1,3 +1,5 @@
 fastmcp
-pywin32
-pywinauto 
+pyautogui
+Pillow
+google-generativeai
+python-dotenv 
