@@ -17,8 +17,16 @@ load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
+# List available models
+# print("Listing available models...")
+# for m in genai.list_models():
+#     print(f"Model name: {m.name}")
+#     print(f"Display name: {m.display_name}")
+#     print(f"Description: {m.description}")
+#     print("---")
+
 # Use the free model with safety settings
-model = genai.GenerativeModel('gemini-pro',
+model = genai.GenerativeModel('gemini-2.0-flash',  # Using the correct model name from the list
     generation_config={
         "temperature": 0.7,
         "top_p": 0.8,
@@ -45,7 +53,7 @@ model = genai.GenerativeModel('gemini-pro',
     ]
 )
 
-max_iterations = 3
+max_iterations = 4
 last_response = None
 iteration = 0
 iteration_response = []
@@ -87,7 +95,7 @@ async def main():
         print("Establishing connection to MCP server...")
         server_params = StdioServerParameters(
             command="python",
-            args=["example2.py"]
+            args=["mcp-server.py"]
         )
 
         async with stdio_client(server_params) as (read, write):
@@ -152,12 +160,14 @@ async def main():
 
 Your task is to:
 1. Analyze the user's request carefully
-2. Plan the sequence of tool calls needed to fulfill the request
+2. Plan and print the sequence of tool calls needed to fulfill the request
 3. Execute the tools in the correct order
 4. Display the final result in Preview
 
 Important Guidelines:
 1. Tool Selection:
+   - ALWAYS check the available tools list above before making any function calls
+   - Use the EXACT function names from the tools list - no variations or substitutions
    - For mathematical operations, use the appropriate calculation tools
    - Always display final results in Preview using open_paint(), draw_rectangle(), and add_text_in_paint()
    - Choose the most appropriate tool for each operation
@@ -179,13 +189,27 @@ Important Guidelines:
    - Add the final answer as text inside the rectangle
    - Use appropriate coordinates for the Preview window
 
+4. Best Practices:
+   - For mathematical operations, use the most appropriate tool from the available list
+   - If a tool exists for a specific operation, use it instead of combining multiple tools
+   - Double-check function names against the available tools list before making calls
+   - When you get an error about an unknown tool, carefully check the available tools list and use the exact function name
+
+6. Error Handling:
+   - If you get an "Unknown tool" error, immediately check the available tools list
+   - Look for the exact function name that matches your intended operation
+   - Do not try to create new function names or combine existing ones
+   - If you're unsure about a function name, look for similar operations in the tools list
+
 Remember:
 - You are autonomous - make decisions about which tools to use and when
+- ALWAYS verify function names against the available tools list
 - Plan your sequence of operations before executing
 - Handle errors gracefully and provide clear feedback
 - Always ensure Preview is ready before drawing operations
 - Keep responses clean and format-compliant
 - Display all final results in Preview
+- When in doubt, check the available tools list again with the closest tool matching the operation
 """
 
                 query = """Find the ASCII values of characters in INDIA and then return sum of exponentials of those values. """
@@ -353,5 +377,3 @@ Remember:
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
-    

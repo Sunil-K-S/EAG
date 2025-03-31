@@ -10,6 +10,8 @@ import pyautogui
 import subprocess
 import time
 import asyncio
+import os
+import tempfile
 
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
@@ -19,14 +21,14 @@ mcp = FastMCP("Calculator")
 #addition tool
 @mcp.tool()
 def add(a: int, b: int) -> int:
-    """Add two numbers.
+    """Add two numbers together.
     
     Args:
-        a (int): First number
-        b (int): Second number
+        a (int): First number to add
+        b (int): Second number to add
         
     Returns:
-        int: Sum of a and b
+        int: The sum of a and b
         
     Example:
         add(5, 3) -> 8
@@ -36,31 +38,31 @@ def add(a: int, b: int) -> int:
 
 @mcp.tool()
 def add_list(l: list) -> int:
-    """Add all numbers in a list.
+    """Add all numbers in a list together.
     
     Args:
         l (list): List of numbers to sum
         
     Returns:
-        int: Sum of all numbers in the list
+        int: The sum of all numbers in the list
         
     Example:
         add_list([1, 2, 3, 4, 5]) -> 15
     """
-    print("CALLED: add(l: list) -> int:")
+    print("CALLED: add_list(l: list) -> int:")
     return sum(l)
 
 # subtraction tool
 @mcp.tool()
 def subtract(a: int, b: int) -> int:
-    """Subtract two numbers.
+    """Subtract second number from first number.
     
     Args:
         a (int): First number (minuend)
         b (int): Second number (subtrahend)
         
     Returns:
-        int: Difference between a and b
+        int: The difference between a and b
         
     Example:
         subtract(10, 3) -> 7
@@ -71,14 +73,14 @@ def subtract(a: int, b: int) -> int:
 # multiplication tool
 @mcp.tool()
 def multiply(a: int, b: int) -> int:
-    """Multiply two numbers.
+    """Multiply two numbers together.
     
     Args:
         a (int): First number
         b (int): Second number
         
     Returns:
-        int: Product of a and b
+        int: The product of a and b
         
     Example:
         multiply(4, 6) -> 24
@@ -89,14 +91,14 @@ def multiply(a: int, b: int) -> int:
 #  division tool
 @mcp.tool() 
 def divide(a: int, b: int) -> float:
-    """Divide two numbers.
+    """Divide first number by second number.
     
     Args:
         a (int): First number (dividend)
         b (int): Second number (divisor)
         
     Returns:
-        float: Quotient of a divided by b
+        float: The quotient of a divided by b
         
     Example:
         divide(15, 3) -> 5.0
@@ -107,7 +109,7 @@ def divide(a: int, b: int) -> float:
 # power tool
 @mcp.tool()
 def power(a: int, b: int) -> int:
-    """Calculate power of two numbers.
+    """Calculate a raised to the power of b.
     
     Args:
         a (int): Base number
@@ -125,13 +127,13 @@ def power(a: int, b: int) -> int:
 # square root tool
 @mcp.tool()
 def sqrt(a: int) -> float:
-    """Calculate square root of a number.
+    """Calculate the square root of a number.
     
     Args:
         a (int): Number to find square root of
         
     Returns:
-        float: Square root of a
+        float: The square root of a
         
     Example:
         sqrt(16) -> 4.0
@@ -142,13 +144,13 @@ def sqrt(a: int) -> float:
 # cube root tool
 @mcp.tool()
 def cbrt(a: int) -> float:
-    """Calculate cube root of a number.
+    """Calculate the cube root of a number.
     
     Args:
         a (int): Number to find cube root of
         
     Returns:
-        float: Cube root of a
+        float: The cube root of a
         
     Example:
         cbrt(27) -> 3.0
@@ -159,13 +161,13 @@ def cbrt(a: int) -> float:
 # factorial tool
 @mcp.tool()
 def factorial(a: int) -> int:
-    """Calculate factorial of a number.
+    """Calculate the factorial of a number (n!).
     
     Args:
         a (int): Number to calculate factorial of
         
     Returns:
-        int: Factorial of a
+        int: The factorial of a
         
     Example:
         factorial(5) -> 120
@@ -176,13 +178,13 @@ def factorial(a: int) -> int:
 # log tool
 @mcp.tool()
 def log(a: int) -> float:
-    """Calculate natural logarithm of a number.
+    """Calculate the natural logarithm of a number (ln).
     
     Args:
-        a (int): Number to calculate log of
+        a (int): Number to calculate natural log of
         
     Returns:
-        float: Natural logarithm of a
+        float: The natural logarithm of a
         
     Example:
         log(2.718281828459045) -> 1.0
@@ -193,14 +195,14 @@ def log(a: int) -> float:
 # remainder tool
 @mcp.tool()
 def remainder(a: int, b: int) -> int:
-    """Calculate remainder of division of two numbers.
+    """Calculate the remainder when a is divided by b.
     
     Args:
         a (int): First number (dividend)
         b (int): Second number (divisor)
         
     Returns:
-        int: Remainder when a is divided by b
+        int: The remainder when a is divided by b
         
     Example:
         remainder(17, 5) -> 2
@@ -211,13 +213,13 @@ def remainder(a: int, b: int) -> int:
 # sin tool
 @mcp.tool()
 def sin(a: int) -> float:
-    """Calculate sine of an angle in radians.
+    """Calculate the sine of an angle in radians.
     
     Args:
         a (int): Angle in radians
         
     Returns:
-        float: Sine of the angle
+        float: The sine of the angle
         
     Example:
         sin(0) -> 0.0
@@ -228,13 +230,13 @@ def sin(a: int) -> float:
 # cos tool
 @mcp.tool()
 def cos(a: int) -> float:
-    """Calculate cosine of an angle in radians.
+    """Calculate the cosine of an angle in radians.
     
     Args:
         a (int): Angle in radians
         
     Returns:
-        float: Cosine of the angle
+        float: The cosine of the angle
         
     Example:
         cos(0) -> 1.0
@@ -245,13 +247,13 @@ def cos(a: int) -> float:
 # tan tool
 @mcp.tool()
 def tan(a: int) -> float:
-    """Calculate tangent of an angle in radians.
+    """Calculate the tangent of an angle in radians.
     
     Args:
         a (int): Angle in radians
         
     Returns:
-        float: Tangent of the angle
+        float: The tangent of the angle
         
     Example:
         tan(0) -> 0.0
@@ -262,14 +264,14 @@ def tan(a: int) -> float:
 # mine tool
 @mcp.tool()
 def mine(a: int, b: int) -> int:
-    """Special mining tool that subtracts twice the second number from the first.
+    """Subtract twice the second number from the first number.
     
     Args:
         a (int): First number
-        b (int): Second number
+        b (int): Second number to subtract twice
         
     Returns:
-        int: Result of a - b - b
+        int: The result of a - b - b
         
     Example:
         mine(10, 2) -> 6
@@ -296,40 +298,54 @@ def create_thumbnail(image_path: str) -> Image:
     return Image(data=img.tobytes(), format="png")
 
 @mcp.tool()
-def strings_to_chars_to_int(string: str) -> list[int]:
-    """Convert each character in a string to its ASCII value.
+def get_ascii_values(string: str) -> list[int]:
+    """Convert a string to its ASCII values. This is the ONLY function to use for ASCII value conversion.
+    
+    IMPORTANT: The function name must be exactly 'get_ascii_values' (plural).
+    Common mistakes to avoid:
+    - ❌ get_ascii_value (singular)
+    - ❌ calculate_ascii_value
+    - ❌ ascii_value
+    - ❌ get_ascii
     
     Args:
-        string (str): Input string to convert
+        string (str): Input string to convert to ASCII values
         
     Returns:
-        list[int]: List of ASCII values for each character
+        list[int]: List of ASCII values for each character in the string
         
-    Example:
-        strings_to_chars_to_int("ABC") -> [65, 66, 67]
+    Examples:
+        # Correct usage:
+        get_ascii_values("ABC") -> [65, 66, 67]
+        get_ascii_values("HOME") -> [72, 79, 77, 69]
+        
+        # Incorrect usage (will fail):
+        get_ascii_value("ABC")  # ❌ Wrong: singular form
+        calculate_ascii_value("ABC")  # ❌ Wrong: wrong function name
+        ascii_value("ABC")  # ❌ Wrong: wrong function name
     """
-    print("CALLED: strings_to_chars_to_int(string: str) -> list[int]:")
+    print("CALLED: get_ascii_values(string: str) -> list[int]:")
     return [int(ord(char)) for char in string]
 
 @mcp.tool()
-def int_list_to_exponential_sum(int_list: list) -> float:
-    """Calculate sum of exponentials of numbers in a list.
+def calculate_exponential_sum(numbers: list) -> float:
+    """Calculate the sum of e raised to each number in the input list.
     
     Args:
-        int_list (list): List of numbers to process
+        numbers (list): List of numbers to calculate exponential sum for
         
     Returns:
-        float: Sum of e raised to each number in the list
+        float: The sum of e raised to each number in the list
         
     Example:
-        int_list_to_exponential_sum([0, 1, 2]) -> 4.718281828459045
+        calculate_exponential_sum([0, 1, 2]) -> 4.718281828459045
     """
-    print("CALLED: int_list_to_exponential_sum(int_list: list) -> float:")
-    return sum(math.exp(i) for i in int_list)
+    print("CALLED: calculate_exponential_sum(numbers: list) -> float:")
+    return sum(math.exp(i) for i in numbers)
 
 @mcp.tool()
-def fibonacci_numbers(n: int) -> list:
-    """Generate the first n Fibonacci numbers.
+def generate_fibonacci_sequence(n: int) -> list:
+    """Generate the first n numbers in the Fibonacci sequence.
     
     Args:
         n (int): Number of Fibonacci numbers to generate
@@ -338,16 +354,15 @@ def fibonacci_numbers(n: int) -> list:
         list: List of first n Fibonacci numbers
         
     Example:
-        fibonacci_numbers(5) -> [0, 1, 1, 2, 3]
+        generate_fibonacci_sequence(5) -> [0, 1, 1, 2, 3]
     """
-    print("CALLED: fibonacci_numbers(n: int) -> list:")
+    print("CALLED: generate_fibonacci_sequence(n: int) -> list:")
     if n <= 0:
         return []
     fib_sequence = [0, 1]
     for _ in range(2, n):
         fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])
     return fib_sequence[:n]
-
 
 @mcp.tool()
 async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
@@ -452,21 +467,18 @@ async def open_paint() -> dict:
         open_paint() -> {"content": [{"type": "text", "text": "Preview opened successfully with a new blank document"}]}
     """
     try:
-        # Open Preview with a new blank document
-        subprocess.Popen(['open', '-a', 'Preview'])
+        # Create a temporary blank image file
+        # Create a temporary directory
+        temp_dir = tempfile.gettempdir()
+        blank_image_path = os.path.join(temp_dir, "blank_canvas.png")
+        
+        # Create a blank white image
+        img = PILImage.new('RGB', (800, 600), color='white')
+        img.save(blank_image_path)
+        
+        # Open the blank image with Preview
+        subprocess.Popen(['open', '-a', 'Preview', blank_image_path])
         await asyncio.sleep(2)  # Wait for Preview to open
-        
-        # Create a new blank document
-        pyautogui.hotkey('command', 'n')
-        await asyncio.sleep(1)
-        
-        # Set the canvas size
-        pyautogui.hotkey('command', 'i')
-        await asyncio.sleep(0.5)
-        pyautogui.write('800')
-        pyautogui.press('tab')
-        pyautogui.write('600')
-        pyautogui.press('return')
         
         return {
             "content": [
