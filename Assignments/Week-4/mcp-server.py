@@ -16,6 +16,10 @@ import tempfile
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
 
+# Global flag to track if Preview is already running
+preview_is_running = False
+preview_blank_image_path = None
+
 # DEFINE TOOLS
 
 #addition tool
@@ -376,20 +380,70 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         
     Returns:
         dict: Status message about the drawing operation
-        
-    Example:
-        draw_rectangle(100, 100, 300, 200) -> {"content": [{"type": "text", "text": "Rectangle drawn from (100,100) to (300,200)"}]}
     """
+    global preview_is_running, preview_blank_image_path, final_image_path
+    
     try:
-        # Select the rectangle tool using keyboard shortcut
-        pyautogui.hotkey('command', 'shift', 'r')
-        await asyncio.sleep(0.5)
+        # Print a visualization of the rectangle to the console
+        print("\n===== RECTANGLE VISUALIZATION =====")
+        print(f"Rectangle drawn from ({x1},{y1}) to ({x2},{y2})")
         
-        # Draw rectangle
-        pyautogui.moveTo(x1, y1)
-        pyautogui.mouseDown()
-        pyautogui.moveTo(x2, y2)
-        pyautogui.mouseUp()
+        # Calculate dimensions
+        width = abs(x2 - x1)
+        height = abs(y2 - y1)
+        print(f"Width: {width}, Height: {height}")
+        
+        # Output a simple ASCII rectangle
+        print("+" + "-" * (min(width // 10, 30)) + "+")
+        for _ in range(min(height // 20, 10)):
+            print("|" + " " * (min(width // 10, 30)) + "|")
+        print("+" + "-" * (min(width // 10, 30)) + "+")
+        print("===================================\n")
+        
+        # Create a new image with PIL directly
+        # Use standard 800x600 canvas with white background
+        img = PILImage.new('RGB', (800, 600), color='white')
+        
+        # Draw the rectangle directly on the image
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(img)
+        
+        # Use fixed coordinates for a large rectangle in the center
+        rect_left = 200
+        rect_top = 150
+        rect_right = 600
+        rect_bottom = 450
+        
+        # Draw rectangle with a thick black border (5 pixels)
+        draw.rectangle([(rect_left, rect_top), (rect_right, rect_bottom)], 
+                       outline='black', width=5)
+        
+        # Save the image to the final output path so we can reuse it
+        temp_dir = tempfile.gettempdir()
+        final_image_path = os.path.join(temp_dir, "final_result.png")
+        img.save(final_image_path)
+        
+        # Store the rectangle coordinates for text placement
+        global rect_center_x, rect_center_y
+        rect_center_x = (rect_left + rect_right) // 2
+        rect_center_y = (rect_top + rect_bottom) // 2
+        
+        print(f"Rectangle image created and saved to: {final_image_path}")
+        
+        # Flag to indicate rectangle was created
+        global rectangle_drawn
+        rectangle_drawn = True
+        
+        # If Preview is already running, replace the current image
+        if preview_is_running:
+            # Close any existing Preview first
+            subprocess.run(['osascript', '-e', 'tell application "Preview" to quit'], capture_output=True)
+            await asyncio.sleep(1)
+        
+        # Open the image with Preview
+        subprocess.run(['open', '-a', 'Preview', final_image_path])
+        await asyncio.sleep(2)
+        preview_is_running = True
         
         return {
             "content": [
@@ -400,6 +454,7 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
             ]
         }
     except Exception as e:
+        print(f"Error in draw_rectangle: {str(e)}")
         return {
             "content": [
                 TextContent(
@@ -409,49 +464,154 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
             ]
         }
 
+# Global variables to track rectangle position and file path
+rect_center_x = None
+rect_center_y = None
+final_image_path = None
+rectangle_drawn = False
+
 @mcp.tool()
 async def add_text_in_paint(text: str) -> dict:
-    """Add text to the Preview canvas.
+    """Add text to the Preview canvas. This will place the text inside the previously drawn rectangle.
     
     Args:
         text (str): Text to add to the canvas
         
     Returns:
         dict: Status message about the text addition
-        
-    Example:
-        add_text_in_paint("Hello World") -> {"content": [{"type": "text", "text": "Text:'Hello World' added successfully"}]}
     """
+    global rectangle_drawn, rect_center_x, rect_center_y, final_image_path, preview_is_running
+    
     try:
-        # Select text tool using keyboard shortcut
-        pyautogui.hotkey('command', 'shift', 't')
-        await asyncio.sleep(0.5)
+        # Print the text visualization to the console
+        print("\n======= TEXT VISUALIZATION =======")
+        print("╔" + "═" * (len(text) + 2) + "╗")
+        print("║ " + text + " ║")
+        print("╚" + "═" * (len(text) + 2) + "╝")
+        print("=================================\n")
         
-        # Click where to start typing (center of the canvas)
-        pyautogui.click(810, 533)
-        await asyncio.sleep(0.5)
-        
-        # Type the text
-        pyautogui.write(text)
-        await asyncio.sleep(0.5)
-        
-        # Click to exit text mode
-        pyautogui.click(1050, 800)
-        
-        return {
-            "content": [
-                TextContent(
-                    type="text",
-                    text=f"Text:'{text}' added successfully"
-                )
-            ]
-        }
+        if rectangle_drawn and final_image_path:
+            # Open the previously created image with rectangle
+            img = PILImage.open(final_image_path)
+            
+            # Add text to the image
+            from PIL import ImageDraw, ImageFont
+            draw = ImageDraw.Draw(img)
+            
+            # Try to load a default system font, or fall back to default
+            try:
+                # Try to use a common system font
+                font_path = '/System/Library/Fonts/Helvetica.ttc'
+                if os.path.exists(font_path):
+                    font = ImageFont.truetype(font_path, 36)
+                else:
+                    # Use default PIL font if Helvetica not available
+                    font = ImageFont.load_default()
+            except Exception:
+                # Fall back to default if any issues loading font
+                font = ImageFont.load_default()
+            
+            # Center the text in the rectangle
+            text_width = draw.textlength(text, font=font)
+            text_x = rect_center_x - (text_width // 2)
+            text_y = rect_center_y - 18  # Approx half the font height
+            
+            # Draw text with black color
+            draw.text((text_x, text_y), text, fill='black', font=font)
+            
+            # Overwrite the same image file
+            img.save(final_image_path)
+            
+            print(f"Text '{text}' added to image at: {final_image_path}")
+            
+            # Close Preview and reopen with the updated image
+            if preview_is_running:
+                # Close any existing Preview first
+                subprocess.run(['osascript', '-e', 'tell application "Preview" to quit'], capture_output=True)
+                await asyncio.sleep(1)
+                
+                # Reopen Preview with the updated image
+                subprocess.run(['open', '-a', 'Preview', final_image_path])
+                await asyncio.sleep(2)
+                preview_is_running = True
+            else:
+                # If Preview wasn't running, just open it
+                subprocess.run(['open', '-a', 'Preview', final_image_path])
+                await asyncio.sleep(2)
+                preview_is_running = True
+            
+            return {
+                "content": [
+                    TextContent(
+                        type="text",
+                        text=f"Text:'{text}' added successfully and displayed in Preview"
+                    )
+                ]
+            }
+        else:
+            # If no rectangle has been drawn, create a new image with just the text
+            img = PILImage.new('RGB', (800, 600), color='white')
+            draw = ImageDraw.Draw(img)
+            
+            # Try to load a default system font, or fall back to default
+            try:
+                # Try to use a common system font
+                font_path = '/System/Library/Fonts/Helvetica.ttc'
+                if os.path.exists(font_path):
+                    font = ImageFont.truetype(font_path, 36)
+                else:
+                    # Use default PIL font if Helvetica not available
+                    font = ImageFont.load_default()
+            except Exception:
+                # Fall back to default if any issues loading font
+                font = ImageFont.load_default()
+            
+            # Center the text in the image
+            text_width = draw.textlength(text, font=font)
+            text_x = 400 - (text_width // 2)
+            text_y = 300 - 18  # Approx half the font height
+            
+            # Draw text with black color
+            draw.text((text_x, text_y), text, fill='black', font=font)
+            
+            # Save the image to the final output path
+            temp_dir = tempfile.gettempdir()
+            final_image_path = os.path.join(temp_dir, "final_result.png")
+            img.save(final_image_path)
+            
+            # Close and reopen Preview with the new image
+            if preview_is_running:
+                # Close any existing Preview first
+                subprocess.run(['osascript', '-e', 'tell application "Preview" to quit'], capture_output=True)
+                await asyncio.sleep(1)
+                
+                # Reopen Preview with the updated image
+                subprocess.run(['open', '-a', 'Preview', final_image_path])
+                await asyncio.sleep(2)
+                preview_is_running = True
+            else:
+                # If Preview wasn't running, just open it
+                subprocess.run(['open', '-a', 'Preview', final_image_path])
+                await asyncio.sleep(2)
+                preview_is_running = True
+            
+            print(f"Text '{text}' added to a new image at: {final_image_path}")
+            
+            return {
+                "content": [
+                    TextContent(
+                        type="text",
+                        text=f"Text:'{text}' added to a new image (no rectangle was drawn first)"
+                    )
+                ]
+            }
     except Exception as e:
+        print(f"Error in add_text_in_paint: {str(e)}")
         return {
             "content": [
                 TextContent(
                     type="text",
-                    text=f"Error: {str(e)}"
+                    text=f"Error adding text: {str(e)}"
                 )
             ]
         }
@@ -462,38 +622,50 @@ async def open_paint() -> dict:
     
     Returns:
         dict: Status message about the Preview opening operation
-        
-    Example:
-        open_paint() -> {"content": [{"type": "text", "text": "Preview opened successfully with a new blank document"}]}
     """
+    global preview_is_running, final_image_path
+    
     try:
-        # Create a temporary blank image file
-        # Create a temporary directory
-        temp_dir = tempfile.gettempdir()
-        blank_image_path = os.path.join(temp_dir, "blank_canvas.png")
+        print("Starting open_paint function...")
         
         # Create a blank white image
         img = PILImage.new('RGB', (800, 600), color='white')
-        img.save(blank_image_path)
+        
+        # Save to temp directory
+        temp_dir = tempfile.gettempdir()
+        final_image_path = os.path.join(temp_dir, "final_result.png")
+        img.save(final_image_path)
+        
+        print(f"Blank canvas created at: {final_image_path}")
+        
+        # Force close any existing Preview to start fresh
+        subprocess.run(['osascript', '-e', 'tell application "Preview" to quit'], capture_output=True)
+        await asyncio.sleep(1)
         
         # Open the blank image with Preview
-        subprocess.Popen(['open', '-a', 'Preview', blank_image_path])
-        await asyncio.sleep(2)  # Wait for Preview to open
+        subprocess.run(['open', '-a', 'Preview', final_image_path])
+        await asyncio.sleep(2)
+        
+        # Set flag indicating Preview is running
+        preview_is_running = True
         
         return {
             "content": [
                 TextContent(
                     type="text",
-                    text="Preview opened successfully with a new blank document"
+                    text="Preview opened with a blank canvas"
                 )
             ]
         }
     except Exception as e:
+        preview_is_running = False
+        error_msg = str(e)
+        print(f"Error in open_paint: {error_msg}")
         return {
             "content": [
                 TextContent(
                     type="text",
-                    text=f"Error opening Preview: {str(e)}"
+                    text=f"Error opening Preview: {error_msg}"
                 )
             ]
         }

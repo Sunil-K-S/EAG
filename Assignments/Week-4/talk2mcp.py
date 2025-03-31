@@ -26,7 +26,7 @@ genai.configure(api_key=api_key)
 #     print("---")
 
 # Use the free model with safety settings
-model = genai.GenerativeModel('gemini-2.0-flash',  # Using the correct model name from the list
+model = genai.GenerativeModel('gemini-2.0-flash-001',  # Using the correct model name from the list
     generation_config={
         "temperature": 0.7,
         "top_p": 0.8,
@@ -53,7 +53,7 @@ model = genai.GenerativeModel('gemini-2.0-flash',  # Using the correct model nam
     ]
 )
 
-max_iterations = 4
+max_iterations = 6
 last_response = None
 iteration = 0
 iteration_response = []
@@ -147,16 +147,25 @@ async def main():
                     
                     tools_description = "\n".join(tools_description)
                     print("Successfully created tools description")
+                    
+                    # Create a simple list of available tool names for quick reference
+                    available_tool_names = [tool.name for tool in tools]
+                    available_tools_list = ", ".join(available_tool_names)
+                    print(f"Available tools list: {available_tools_list}")
+                    
                 except Exception as e:
                     print(f"Error creating tools description: {e}")
                     tools_description = "Error loading tools"
+                    available_tools_list = "Error loading tool names"
                 
                 print("Created system prompt...")
                 
                 # System prompt for the agent
-                SYSTEM_PROMPT = """You are an autonomous agent that can perform mathematical calculations and display results using Preview on macOS. You have access to these tools:
+                SYSTEM_PROMPT = f"""You are an autonomous agent that can perform mathematical calculations and display results using Preview on macOS. You have access to ONLY these specific tools:
 
 {tools_description}
+
+AVAILABLE TOOLS (use ONLY these exact names): {available_tools_list}
 
 Your task is to:
 1. Analyze the user's request carefully
@@ -166,12 +175,12 @@ Your task is to:
 
 Important Guidelines:
 1. Tool Selection:
-   - ALWAYS check the available tools list above before making any function calls
-   - Use the EXACT function names from the tools list - no variations or substitutions
-   - For mathematical operations, use the appropriate calculation tools
-   - Always display final results in Preview using open_paint(), draw_rectangle(), and add_text_in_paint()
-   - Choose the most appropriate tool for each operation
-   - Consider the order of operations
+   - You can ONLY use the tools listed above - no other tools exist
+   - NEVER try to use a tool that isn't in the AVAILABLE TOOLS list
+   - Read the AVAILABLE TOOLS list carefully and identify tools that match the functionality you need
+   - If you need to perform an operation, first check if there's a specialized tool for it
+   - Always check the AVAILABLE TOOLS list before making any function calls
+   - Use the EXACT function names from the tools list - no variations allowed
 
 2. Response Format:
    You must respond with EXACTLY ONE line in one of these formats (no additional text):
@@ -180,39 +189,39 @@ Important Guidelines:
    2. For final answers:
       FINAL_ANSWER: [message]
 
+   IMPORTANT PARAMETER FORMATTING RULES:
+   - For arrays, use ONLY the array format directly: [1, 2, 3] and NOT variable assignments like l=[1, 2, 3]
+   - Parameters must be raw values without variable names or prefixes
+
    DO NOT include any explanations or additional text.
    Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:
 
-3. Displaying Results:
-   - Always open Preview before drawing
-   - Draw a rectangle to frame the result
-   - Add the final answer as text inside the rectangle
-   - Use appropriate coordinates for the Preview window
-
-4. Best Practices:
-   - For mathematical operations, use the most appropriate tool from the available list
-   - If a tool exists for a specific operation, use it instead of combining multiple tools
-   - Double-check function names against the available tools list before making calls
-   - When you get an error about an unknown tool, carefully check the available tools list and use the exact function name
-
-6. Error Handling:
-   - If you get an "Unknown tool" error, immediately check the available tools list
-   - Look for the exact function name that matches your intended operation
-   - Do not try to create new function names or combine existing ones
-   - If you're unsure about a function name, look for similar operations in the tools list
+3. Best Practices:
+   - If you get an "Unknown tool" error, check the AVAILABLE TOOLS list and use the exact function name
+   - Do not try to create new tools or use tools that aren't listed
+   - For compound operations, see if there's a specialized tool that can do the entire operation at once
+   - Look for tools that handle the entire task rather than breaking it into smaller steps
 
 Remember:
 - You are autonomous - make decisions about which tools to use and when
-- ALWAYS verify function names against the available tools list
+- ALWAYS verify function names against the AVAILABLE TOOLS list
 - Plan your sequence of operations before executing
 - Handle errors gracefully and provide clear feedback
-- Always ensure Preview is ready before drawing operations
-- Keep responses clean and format-compliant
-- Display all final results in Preview
-- When in doubt, check the available tools list again with the closest tool matching the operation
 """
 
-                query = """Find the ASCII values of characters in INDIA and then return sum of exponentials of those values. """
+                query = """Find the ASCII values of characters in the word "INDIA", then calculate the sum of exponentials of those ASCII values.
+
+After completing the calculation, display the result visually:
+1. Open a blank canvas or document
+2. Draw a visual container (like a rectangle) to frame the result
+3. Add the calculated result as text
+4. Finish with a final answer
+
+Look at the available tools and choose the appropriate ones for each step. Make sure to:
+- Verify that each tool exists before using it
+- Allow enough time between operations for them to complete
+- Execute operations in a logical sequence
+"""
                 print("Starting iteration loop...")
                 
                 # Use global iteration variables
@@ -261,7 +270,9 @@ Remember:
                             tool = next((t for t in tools if t.name == func_name), None)
                             if not tool:
                                 print(f"DEBUG: Available tools: {[t.name for t in tools]}")
-                                raise ValueError(f"Unknown tool: {func_name}")
+                                error_msg = f"Unknown tool: {func_name}. Available tools are: {available_tools_list}"
+                                print(f"DEBUG: {error_msg}")
+                                raise ValueError(error_msg)
 
                             print(f"DEBUG: Found tool: {tool.name}")
                             print(f"DEBUG: Tool schema: {tool.inputSchema}")
@@ -338,32 +349,7 @@ Remember:
 
                     elif response_text.startswith("FINAL_ANSWER:"):
                         print("\n=== Agent Execution Complete ===")
-                        result = await session.call_tool("open_paint")
-                        print(result.content[0].text)
-
-                        # Wait longer for Paint to be fully maximized
-                        await asyncio.sleep(1)
-
-                        # Draw a rectangle
-                        result = await session.call_tool(
-                            "draw_rectangle",
-                            arguments={
-                                "x1": 780,
-                                "y1": 380,
-                                "x2": 1140,
-                                "y2": 700
-                            }
-                        )
-                        print(result.content[0].text)
-
-                        # Draw rectangle and add text
-                        result = await session.call_tool(
-                            "add_text_in_paint",
-                            arguments={
-                                "text": response_text
-                            }
-                        )
-                        print(result.content[0].text)
+                        print(f"Final answer: {response_text}")
                         break
 
                     iteration += 1
