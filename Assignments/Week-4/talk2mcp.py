@@ -213,14 +213,22 @@ Remember:
 
 After completing the calculation, display the result visually:
 1. Open a blank canvas or document
-2. Draw a visual container (like a rectangle) to frame the result
-3. Add the calculated result as text
-4. Finish with a final answer
+2. Draw a rectangle on the canvas using coordinates (100, 100) to (700, 500) to frame the result
+3. Add the calculated result as text inside the rectangle
+4. Finish with a final answer showing the calculation result
 
-Look at the available tools and choose the appropriate ones for each step. Make sure to:
-- Verify that each tool exists before using it
-- Allow enough time between operations for them to complete
-- Execute operations in a logical sequence
+Follow these steps in sequence:
+- First, get the ASCII values for "INDIA"
+- Then calculate the sum of exponentials of those ASCII values
+- Open a drawing application
+- Draw a rectangle with the coordinates (100, 100, 700, 500)
+- Finally, add the calculated result as text inside the rectangle
+
+Make sure to:
+- Choose the appropriate functions from the available tools list
+- Provide the correct parameters for each function
+- Wait for each operation to complete before proceeding to the next
+- Format parameters correctly (use arrays in [value1, value2] format, not variable assignments)
 """
                 print("Starting iteration loop...")
                 

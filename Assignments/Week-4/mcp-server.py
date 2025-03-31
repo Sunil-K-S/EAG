@@ -408,11 +408,14 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         from PIL import ImageDraw
         draw = ImageDraw.Draw(img)
         
-        # Use fixed coordinates for a large rectangle in the center
-        rect_left = 200
-        rect_top = 150
-        rect_right = 600
-        rect_bottom = 450
+        # Use the coordinates provided by the client but ensure they're within bounds
+        # Ensure coordinates are within the 800x600 canvas
+        rect_left = max(10, min(x1, 790))
+        rect_top = max(10, min(y1, 590))
+        rect_right = max(10, min(x2, 790))
+        rect_bottom = max(10, min(y2, 590))
+        
+        print(f"Using adjusted coordinates: ({rect_left},{rect_top}) to ({rect_right},{rect_bottom})")
         
         # Draw rectangle with a thick black border (5 pixels)
         draw.rectangle([(rect_left, rect_top), (rect_right, rect_bottom)], 
