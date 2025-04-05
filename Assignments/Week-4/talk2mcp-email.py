@@ -209,7 +209,8 @@ Remember:
 - Handle errors gracefully and provide clear feedback
 """
 
-                query = """Find the ASCII values of characters in the word "INDIA", then calculate the sum of exponentials of those ASCII values. Open paint, draw a rectangle that fits and write the final answer within this rectangle.
+                query = """Find the ASCII values of characters in the word "INDIA", then calculate the sum of exponentials of those ASCII values.
+                            Mail the final answer to me. My email address is "sunilks.eminem@gmail.com"
 
 Make sure to:
 - Choose the appropriate functions from the available tools list
