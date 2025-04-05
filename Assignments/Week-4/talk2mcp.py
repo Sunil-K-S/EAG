@@ -210,19 +210,7 @@ Remember:
 """
 
                 query = """Find the ASCII values of characters in the word "INDIA", then calculate the sum of exponentials of those ASCII values.
-
-After completing the calculation, display the result visually:
-1. Open a blank canvas or document
-2. Draw a rectangle on the canvas using coordinates (100, 100) to (700, 500) to frame the result
-3. Add the calculated result as text inside the rectangle
-4. Finish with a final answer showing the calculation result
-
-Follow these steps in sequence:
-- First, get the ASCII values for "INDIA"
-- Then calculate the sum of exponentials of those ASCII values
-- Open a drawing application
-- Draw a rectangle with the coordinates (100, 100, 700, 500)
-- Finally, add the calculated result as text inside the rectangle
+                            Mail the final answer to me. My email address is "sunilks.eminem@gmail.com"
 
 Make sure to:
 - Choose the appropriate functions from the available tools list

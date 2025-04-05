@@ -12,6 +12,16 @@ import time
 import asyncio
 import os
 import tempfile
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+import json
+import smtplib
 
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
@@ -19,6 +29,36 @@ mcp = FastMCP("Calculator")
 # Global flag to track if Preview is already running
 preview_is_running = False
 preview_blank_image_path = None
+
+# Gmail OAuth2 configuration
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+TOKEN_FILE = 'token.json'
+CREDENTIALS_FILE = 'credentials.json'
+
+def get_gmail_service():
+    """Get Gmail service using OAuth2 credentials."""
+    creds = None
+    
+    # Load token from file if it exists
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE, 'r') as token:
+            creds = Credentials.from_authorized_user_info(json.load(token), SCOPES)
+    
+    # If no valid credentials, get new ones
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # Create flow from client secrets
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'client_secrets.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        
+        # Save credentials for future use
+        with open(TOKEN_FILE, 'w') as token:
+            token.write(creds.to_json())
+    
+    return build('gmail', 'v1', credentials=creds)
 
 # DEFINE TOOLS
 
@@ -697,6 +737,64 @@ def debug_error(error: str) -> list[base.Message]:
         base.UserMessage(error),
         base.AssistantMessage("I'll help debug that. What have you tried so far?"),
     ]
+
+@mcp.tool()
+async def send_email(to_email: str, subject: str, body: str, image_path: str = None) -> dict:
+    """Send an email using Gmail API with OAuth2 authentication.
+    
+    Args:
+        to_email (str): Recipient email address
+        subject (str): Email subject
+        body (str): Email body text
+        image_path (str, optional): Path to image file to attach
+        
+    Returns:
+        dict: Status message about the email sending operation
+    """
+    try:
+        # Get Gmail service
+        service = get_gmail_service()
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        # Add body
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Add image if provided
+        if image_path and os.path.exists(image_path):
+            with open(image_path, 'rb') as f:
+                img = MIMEImage(f.read())
+                img.add_header('Content-Disposition', 'attachment', filename=os.path.basename(image_path))
+                msg.attach(img)
+
+        # Convert message to raw format
+        raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
+        
+        # Send email
+        message = {'raw': raw_message}
+        service.users().messages().send(userId='me', body=message).execute()
+
+        return {
+            "content": [
+                TextContent(
+                    type="text",
+                    text=f"Email sent successfully to {to_email}"
+                )
+            ]
+        }
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return {
+            "content": [
+                TextContent(
+                    type="text",
+                    text=f"Error sending email: {str(e)}"
+                )
+            ]
+        }
 
 if __name__ == "__main__":
     # Check if running with mcp dev command
