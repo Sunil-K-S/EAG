@@ -689,6 +689,15 @@ Current task: {query}
                     data = json.loads(json_str)
                     print(f"DEBUG: Parsed JSON data: {json.dumps(data, indent=2)}")
                     
+                    # Check if this is a duplicate email send
+                    if data.get('function') == 'send_email':
+                        # Check if we've already sent an email in this session
+                        for history_item in self.history:
+                            if (history_item.get('function') == 'send_email' and 
+                                history_item.get('parameters', {}).get('to_email') == data['parameters'].get('to_email')):
+                                print("DEBUG: Email already sent in this session, skipping")
+                                return ResultStatus.SUCCESS, None, "Email already sent"
+                    
                     # Fix email parameters if needed
                     if data.get('function') == 'send_email' and 'parameters' in data:
                         params = data['parameters']
