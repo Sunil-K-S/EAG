@@ -184,17 +184,58 @@ class EmailAgent:
     async def verify_step(self, step_result: Dict[str, Any], verification_type: VerificationType) -> Tuple[bool, str]:
         """Verify a single step result with detailed checking."""
         try:
-            verification_funcs = {
-                VerificationType.EMAIL: self.verify_email,
-                VerificationType.CALCULATION: self.verify_calculation,
-                VerificationType.ASCII: self.verify_ascii,
-                VerificationType.CONTENT: self.verify_content,
-                VerificationType.GENERAL: self.verify_general
-            }
-            
-            verify_func = verification_funcs.get(verification_type, self.verify_general)
-            return await verify_func(step_result)
+            print(f"DEBUG: Verifying step with type: {verification_type}")
+            print(f"DEBUG: Step result type: {type(step_result)}")
+            print(f"DEBUG: Step result: {step_result}")
+
+            # Extract result content based on verification type
+            if verification_type == VerificationType.ASCII:
+                # For ASCII values, we need to convert TextContent to integers
+                if hasattr(step_result, 'content') and isinstance(step_result.content, list):
+                    values = [int(item.text) for item in step_result.content]
+                    print(f"DEBUG: Extracted ASCII values: {values}")
+                    return await self.verify_ascii({"values": values})
+            elif verification_type == VerificationType.CALCULATION:
+                # For calculations, pass the raw result to verify_calculation
+                print(f"DEBUG: Passing raw result to verify_calculation: {step_result}")
+                return await self.verify_calculation(step_result)
+            elif verification_type == VerificationType.EMAIL:
+                # For email, check if the result indicates success
+                if hasattr(step_result, 'content') and isinstance(step_result.content, list):
+                    try:
+                        # Get the first content item's text
+                        content_text = step_result.content[0].text
+                        print(f"DEBUG: Email content text: {content_text}")
+                        
+                        # Parse the outer JSON string
+                        outer_data = json.loads(content_text)
+                        print(f"DEBUG: Email outer data: {outer_data}")
+                        
+                        # Parse the inner JSON string from the content array
+                        inner_data = json.loads(outer_data['content'][0]['text'])
+                        print(f"DEBUG: Email inner data: {inner_data}")
+                        
+                        if inner_data.get('is_valid', False):
+                            return True, "Email verification passed"
+                    except (json.JSONDecodeError, IndexError, AttributeError) as e:
+                        print(f"DEBUG: Email verification error: {str(e)}")
+                        return False, f"Email verification error: {str(e)}"
+                return False, "Invalid email result format"
+            elif verification_type == VerificationType.CONTENT:
+                # For content, extract subject and body
+                if hasattr(step_result, 'parameters'):
+                    subject = step_result.parameters.get('subject', '')
+                    body = step_result.parameters.get('body', '')
+                    print(f"DEBUG: Extracted content - subject: {subject}, body length: {len(body)}")
+                    return await self.verify_content({"subject": subject, "body": body})
+            else:
+                # For general verification, pass the raw result
+                print(f"DEBUG: Using general verification for result: {step_result}")
+                return await self.verify_general(step_result)
+
+            return False, "Unsupported verification type or invalid result format"
         except Exception as e:
+            print(f"DEBUG: Verification error: {str(e)}")
             return False, f"Verification failed: {str(e)}"
 
     async def verify_email(self, result: Dict[str, Any]) -> Tuple[bool, str]:
@@ -219,34 +260,77 @@ class EmailAgent:
     async def verify_calculation(self, result: Dict[str, Any]) -> Tuple[bool, str]:
         """Verify calculation results."""
         try:
-            value = result.get("value")
-            if not isinstance(value, (int, float)):
-                return False, "Invalid numerical type"
+            print(f"DEBUG: Starting calculation verification")
+            print(f"DEBUG: Result type: {type(result)}")
+            print(f"DEBUG: Raw result: {result}")
+
+            # Handle case where result is a string
+            if isinstance(result, str):
+                try:
+                    print(f"DEBUG: Parsing string result as JSON")
+                    result = json.loads(result)
+                except json.JSONDecodeError as e:
+                    print(f"DEBUG: JSON decode error: {str(e)}")
+                    return False, "Invalid JSON string format"
+
+            # Extract the result from the complex response structure
+            if hasattr(result, 'content') and isinstance(result.content, list):
+                print(f"DEBUG: Processing content list")
+                # Get the first content item's text
+                content_text = result.content[0].text
+                print(f"DEBUG: Content text: {content_text}")
                 
-            # Range check
-            if abs(value) > 1e308:  # Max float value
-                return False, "Result too large"
+                # Parse the outer JSON string
+                outer_data = json.loads(content_text)
+                print(f"DEBUG: Outer data: {outer_data}")
                 
-            # NaN/Inf check
-            if isinstance(value, float) and (value != value or value == float('inf')):
-                return False, "Invalid numerical result"
+                # Parse the inner JSON string from the content array
+                inner_data = json.loads(outer_data['content'][0]['text'])
+                print(f"DEBUG: Inner data: {inner_data}")
                 
-            return True, "Calculation verification passed"
+                if inner_data.get('is_valid'):
+                    result_value = inner_data['data']['result']
+                    print(f"DEBUG: Extracted result value: {result_value}")
+                    
+                    # Validate the result
+                    if isinstance(result_value, (int, float)):
+                        if abs(result_value) > 1e308:  # Max float value
+                            return False, "Result too large"
+                        if isinstance(result_value, float) and (result_value != result_value or result_value == float('inf')):
+                            return False, "Invalid numerical result"
+                        return True, f"Valid calculation result: {result_value}"
+                    return False, "Result is not a number"
+                return False, f"Calculation validation failed: {inner_data.get('details', 'Unknown error')}"
+            
+            return False, "Invalid result format"
+            
+        except json.JSONDecodeError as e:
+            print(f"DEBUG: JSON parsing error: {str(e)}")
+            return False, f"JSON parsing error: {str(e)}"
         except Exception as e:
+            print(f"DEBUG: Calculation verification error: {str(e)}")
             return False, f"Calculation verification error: {str(e)}"
 
     async def verify_ascii(self, result: Dict[str, Any]) -> Tuple[bool, str]:
         """Verify ASCII values."""
         try:
             values = result.get("values", [])
-            if not isinstance(values, list):
-                return False, "Expected list of ASCII values"
-                
+            if not values:
+                return False, "No ASCII values found"
+
+            # Convert all values to integers
+            try:
+                values = [int(v) for v in values]
+            except (ValueError, TypeError):
+                return False, "Invalid ASCII value format"
+
             # Valid ASCII range check
-            if not all(isinstance(x, int) and 0 <= x <= 127 for x in values):
-                return False, "Invalid ASCII values found"
-                
-            return True, "ASCII verification passed"
+            if not all(0 <= x <= 127 for x in values):
+                invalid_values = [x for x in values if not (0 <= x <= 127)]
+                return False, f"Invalid ASCII values found: {invalid_values}"
+
+            print(f"DEBUG: Verified ASCII values: {values}")
+            return True, f"Valid ASCII values: {values}"
         except Exception as e:
             return False, f"ASCII verification error: {str(e)}"
 
@@ -316,6 +400,10 @@ class EmailAgent:
                     print(f"DEBUG: Verification result: {is_valid}, {verify_msg}")
                     
                     if is_valid:
+                        # For ASCII values, extract the actual values from the result
+                        if verification_type == VerificationType.ASCII:
+                            values = [int(item.text) for item in result.content]
+                            return ResultStatus.SUCCESS, {"values": values}, verify_msg
                         return ResultStatus.SUCCESS, result, verify_msg
                     elif attempt < MAX_RETRIES - 1:
                         print(f"DEBUG: Verification failed, retrying...")
@@ -347,106 +435,65 @@ AVAILABLE TOOLS (use ONLY these exact names): {available_tools}
 
 Task Processing Guidelines:
 
-1. Analysis & Planning:
+1. Planning and Analysis:
+   - You can explain your plan and thinking process
    - Break down complex tasks into clear steps
-   - Validate inputs before processing
-   - Plan verification steps for each operation
-   - Consider potential failure points
-   - EXPLICITLY state your reasoning type (arithmetic/logic/lookup)
+   - Show your reasoning and approach
+   - BUT when ready to execute, use exact function call format
 
-2. Execution Format (STRICT JSON):
-   For function calls, you MUST use this exact format:
-   ```json
-   {{
-     "function": "function_name",
-     "parameters": {{
-       "to": "email@example.com",       # for email functions
-       "subject": "Subject line",       # for email functions
-       "body": "Email content",         # for email functions
-       "string": "text",               # for ASCII functions
-       "numbers": [1, 2, 3],           # for calculation functions
-       "value": 123.45                 # for verification functions
-     }},
-     "verification": {{
-       "type": "verification_type",    # Must be one of: email_validation, calculation, ascii_values
-       "checks": [                     # Must match the verification type:
-         "format",                     # For email: format, domain, content
-         "domain",                     # For calculation: range, precision, overflow
-         "content"                     # For ASCII: range, charset, length
-       ]
-     }},
-     "reasoning": {{
-       "type": "arithmetic|logic|lookup",
-       "explanation": "Brief explanation of the reasoning used",
-       "confidence": 0.95              # Confidence score between 0 and 1
-     }}
-   }}
-   ```
+2. Response Format Requirements:
+   When executing an action, your function call MUST be on its own line in this format:
+   FUNCTION_CALL: {{"function": "name", "parameters": {{}}, "verification": {{}}, "reasoning": {{}}}}
 
-3. Conversation Context Management:
-   - Each response must reference previous steps if any
-   - Include step number and relation to previous steps
-   - Update your understanding based on previous results
-   - Example: "Based on step 2's ASCII values [65,66], now calculating..."
+   When providing final answer, it MUST be on its own line in this format:
+   FINAL_ANSWER: {{"status": "complete", "message": "...", "summary": []}}
 
-4. Self-Verification Steps:
-   Before executing any operation:
-   1. Validate inputs match expected format
-   2. Check if operation makes sense in current context
-   3. Verify prerequisites are met
-   4. Estimate expected output range
-   5. Compare actual output with expectations
+3. Example Valid Response:
+   Here's my plan:
+   1. First, we'll get ASCII values
+   2. Then calculate exponentials
+   3. Finally send email
 
-5. Error Handling and Fallbacks:
-   If primary approach fails:
-   1. Log the error and reason
-   2. Try alternative approach if available
-   3. If uncertain (confidence < 0.8):
-      - State your uncertainty
-      - List alternative approaches
-      - Request clarification if needed
-   4. If tool fails:
-      - Report specific error
-      - Suggest workaround
-      - Consider manual calculation
+   Let's start with step 1:
+   FUNCTION_CALL: {{"function": "get_ascii_values", "parameters": {{"string": "INDIA"}}, "verification": {{"type": "ascii_values", "checks": ["range", "charset", "length"]}}, "reasoning": {{"type": "lookup", "explanation": "Get ASCII values", "confidence": 1.0}}}}
 
-6. Response Formats:
-   A. For function calls:
-   FUNCTION_CALL: {{
-     "function": "name",
-     "parameters": {...},
-     "verification": {...},
-     "reasoning": {{
-       "type": "arithmetic|logic|lookup",
-       "explanation": "...",
-       "confidence": 0.95
-     }}
-   }}
+4. JSON Structure Requirements:
+   Function calls must include:
+   - function: Tool name from available tools list
+   - parameters: Required parameters for the tool
+   - verification: Type and checks for validation
+   - reasoning: Type, explanation, and confidence
 
-   B. For final answers:
-   FINAL_ANSWER: {{
-     "status": "complete|partial|failed",
-     "message": "...",
-     "summary": [...],
-     "confidence": 0.95,
-     "fallback_suggestions": [...]
-   }}
+5. Parameter Types:
+   Email Functions:
+   - to: "email@example.com"
+   - subject: "Subject line"
+   - body: "Content"
 
-7. Progress Tracking:
-   - Maintain numbered steps
-   - Reference previous results
-   - Track completion status
-   - Report confidence levels
-   - Log verification results
+   ASCII Functions:
+   - string: "text"
+
+   Calculation Functions:
+   - numbers: [1, 2, 3]
+   - value: 123.45
+
+6. Verification Types:
+   - email_validation: ["format", "domain", "content"]
+   - calculation: ["range", "precision", "overflow"]
+   - ascii_values: ["range", "charset", "length"]
+
+7. Reasoning Types:
+   - arithmetic: For calculations
+   - logic: For decision making
+   - lookup: For value retrieval
 
 Remember:
-- Use exact function names from tools list
+- You can explain your thinking
+- Show your plan and steps
+- BUT function calls must be in exact format
+- Function call must be on its own line
+- No markdown in function calls
 - Follow JSON structure strictly
-- Include all required fields
-- Use correct verification types and checks
-- Always perform self-checks
-- Maintain conversation context
-- Have fallback plans ready
 '''
 
     async def run(self, query: str):
@@ -484,9 +531,16 @@ Remember:
                             
                             # Handle result
                             if status == ResultStatus.SUCCESS:
-                                self.history.append({"step": self.iteration + 1, "result": result, "message": message})
                                 if message.startswith("FINAL_ANSWER"):
                                     break
+                                # Add the result to history
+                                if hasattr(result, 'function'):
+                                    self.history.append({
+                                        'function': result.function,
+                                        'parameters': result.parameters,
+                                        'result': result,
+                                        'message': message
+                                    })
                             elif status == ResultStatus.FAILURE:
                                 print(f"Step failed: {message}")
                                 break
@@ -540,12 +594,24 @@ Remember:
             raise Exception(f"LLM response error: {str(e)}")
 
     def prepare_prompt(self, system_prompt: str, query: str) -> str:
-        """Prepare the current prompt with history."""
+        """Prepare the current prompt with history and next step guidance."""
+        # Format history with step numbers and results
         history_text = "\n".join(
-            f"Step {item['step']}: {item['message']}"
-            for item in self.history
+            f"Step {i+1}: {item.get('function', 'Unknown function')} - {item.get('message', 'No message available')}"
+            for i, item in enumerate(self.history)
         )
-        return f"{system_prompt}\n\nHistory:\n{history_text}\n\nQuery: {query}"
+        
+        # Add next step guidance
+        next_step_guidance = "\nWhat should I do next?" if self.history else ""
+        
+        # Combine all parts
+        return f"""{system_prompt}
+
+History of completed steps:
+{history_text}
+
+Current task: {query}
+{next_step_guidance}"""
 
     async def validate_json_structure(self, data: Dict, schema_type: str) -> Tuple[bool, str]:
         """Validate JSON structure against defined schemas."""
@@ -564,7 +630,7 @@ Remember:
             if schema_type == "function_call":
                 func_name = data["function"]
                 if func_name == "send_email":
-                    required_params = ["to", "subject", "body"]
+                    required_params = ["to_email", "subject", "body"]
                     for param in required_params:
                         if param not in data["parameters"]:
                             return False, f"Missing required parameter: {param}"
@@ -589,23 +655,75 @@ Remember:
             return False, f"JSON validation error: {str(e)}"
 
     async def process_llm_response(self, session: ClientSession, response: str) -> Tuple[ResultStatus, Any, str]:
-        """Process LLM response with enhanced JSON validation."""
+        """Process LLM response with enhanced JSON validation and planning text handling."""
         try:
             # Clean up response text
             response_text = response.strip()
             
-            # Debug logging
-            print(f"\nDEBUG: Raw LLM response: {response_text}")
+            # Print the full response for visibility
+            print("\n=== LLM Full Response ===")
+            print(response_text)
+            print("========================\n")
             
-            if "FUNCTION_CALL:" in response_text:
+            # Look for function call or final answer in the response
+            function_call_match = None
+            final_answer_match = None
+            
+            # Check each line for function call or final answer
+            for line in response_text.split('\n'):
+                line = line.strip()
+                if "FUNCTION_CALL:" in line:
+                    function_call_match = line
+                    break
+                elif "FINAL_ANSWER:" in line:
+                    final_answer_match = line
+                    break
+            
+            if function_call_match:
                 try:
                     # Extract JSON part
-                    json_str = response_text.split("FUNCTION_CALL:", 1)[1].strip()
+                    json_str = function_call_match.split("FUNCTION_CALL:", 1)[1].strip()
                     print(f"DEBUG: Extracted JSON string: {json_str}")
                     
                     # Parse JSON
                     data = json.loads(json_str)
                     print(f"DEBUG: Parsed JSON data: {json.dumps(data, indent=2)}")
+                    
+                    # Fix email parameters if needed
+                    if data.get('function') == 'send_email' and 'parameters' in data:
+                        params = data['parameters']
+                        print(f"DEBUG: Original email parameters: {json.dumps(params, indent=2)}")
+                        
+                        # Handle image_path
+                        if params.get('image_path') is None:
+                            params['image_path'] = ''
+                            print("DEBUG: Set empty image_path")
+                        
+                        # Ensure all required parameters are present
+                        required_params = ['to_email', 'subject', 'body']
+                        for param in required_params:
+                            if param not in params:
+                                print(f"DEBUG: Missing required parameter: {param}")
+                                return ResultStatus.FAILURE, None, f"Missing required parameter: {param}"
+                        
+                        print(f"DEBUG: Final email parameters: {json.dumps(params, indent=2)}")
+                        
+                        # Fix verification structure
+                        if 'verification' in data:
+                            if isinstance(data['verification'], dict) and 'email_validation' in data['verification']:
+                                data['verification'] = {
+                                    'type': 'email_validation',
+                                    'checks': data['verification']['email_validation']
+                                }
+                                print(f"DEBUG: Updated verification structure: {json.dumps(data['verification'], indent=2)}")
+                    
+                    # Check if this step has already been completed
+                    if self.history:
+                        last_step = self.history[-1]
+                        if (last_step.get('function') == data['function'] and 
+                            last_step.get('parameters') == data['parameters']):
+                            print("DEBUG: Skipping already completed step")
+                            return ResultStatus.SUCCESS, last_step['result'], "Step already completed"
                     
                     # Validate JSON structure
                     is_valid, msg = await self.validate_json_structure(data, "function_call")
@@ -616,6 +734,16 @@ Remember:
                     # Process the validated function call
                     result = await self.process_step(session, data)
                     print(f"DEBUG: Process step result: {result}")
+                    
+                    # Store the step in history
+                    if result[0] == ResultStatus.SUCCESS:
+                        self.history.append({
+                            'function': data['function'],
+                            'parameters': data['parameters'],
+                            'result': result[1],
+                            'message': result[2]  # Store the message from the result
+                        })
+                    
                     return result
                     
                 except json.JSONDecodeError as e:
@@ -625,10 +753,10 @@ Remember:
                     print(f"DEBUG: Function call processing error: {str(e)}")
                     return ResultStatus.FAILURE, None, f"Error processing function call: {str(e)}"
                 
-            elif "FINAL_ANSWER:" in response_text:
+            elif final_answer_match:
                 try:
                     # Extract JSON part
-                    json_str = response_text.split("FINAL_ANSWER:", 1)[1].strip()
+                    json_str = final_answer_match.split("FINAL_ANSWER:", 1)[1].strip()
                     print(f"DEBUG: Extracted final answer JSON: {json_str}")
                     
                     # Parse JSON
@@ -650,8 +778,9 @@ Remember:
                     print(f"DEBUG: Final answer processing error: {str(e)}")
                     return ResultStatus.FAILURE, None, f"Error processing final answer: {str(e)}"
             else:
-                print(f"DEBUG: Invalid response format - no recognized prefix")
-                return ResultStatus.FAILURE, None, "Response must start with FUNCTION_CALL: or FINAL_ANSWER:"
+                print(f"DEBUG: No valid function call or final answer found in response")
+                print("DEBUG: Response must contain a line starting with FUNCTION_CALL: or FINAL_ANSWER:")
+                return ResultStatus.FAILURE, None, "Response must contain FUNCTION_CALL: or FINAL_ANSWER:"
                 
         except Exception as e:
             print(f"DEBUG: Unexpected error in process_llm_response: {str(e)}")
