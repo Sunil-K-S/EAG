@@ -198,49 +198,48 @@ async def main():
                                 
                                 # Don't rely on function name patterns - store all interesting data
                                 # Store values, numbers, and strings that might be useful
-                                if isinstance(content, dict):
-                                    for key, value in content.items():
-                                        result_key = f"{func_name}_{key}"
-                                        step_results[result_key] = value
-                                        console.print(f"[green]Stored result: {result_key} = {value}[/green]")
+                                for key, value in content.items():
+                                    result_key = f"{func_name}_{key}"
+                                    step_results[result_key] = value
+                                    console.print(f"Stored result: {result_key} = {value}")
                                 
-                                # Store the entire result
-                                step_results[func_name] = content
-                                
+                                # For calculate_exponential_sum, store exact result for future use
+                                if func_name == "calculate_exponential_sum" and "scientific_notation" in content:
+                                    step_results["exact_exp_sum"] = content["scientific_notation"]
+                                    console.print(f"[green]Stored exact exponential sum: {content['scientific_notation']}[/green]")
                         except Exception as e:
-                            console.print(f"[yellow]Could not parse result for {func_name}: {e}[/yellow]")
-                            # Still store the raw result
-                            if hasattr(return_val, 'content'):
-                                step_results[func_name] = return_val.content
-                            else:
-                                step_results[func_name] = str(return_val)
-                        
+                            console.print(f"[yellow]Warning: Unable to parse result content: {str(e)}[/yellow]")
+                            
                         # Mark this function as completed
                         completed_functions.add(func_name)
-                        console.print(f"[green]Marked {func_name} as completed[/green]")
+                        console.print(f"Marked {func_name} as completed")
                         
-                        # Remove from failed functions if it was previously failed
-                        if func_name in failed_functions:
-                            failed_functions.remove(func_name)
-                        
-                        # Add function result to conversation history
-                        console.print("\n[cyan]Updating conversation history...[/cyan]")
-                        history_entry = {
-                            "function": func_name,
-                            "parameters": args,
-                            "result": return_val,
-                            "timestamp": time.time(),
-                            "status": "completed"
-                        }
-                        conversation_history.append(history_entry)
-                        console.print(f"[green]Added {func_name} result to history[/green]")
-                        console.print(f"[dim]Conversation history now has {len(conversation_history)} entries[/dim]")
+                        # Update conversation history with the result
+                        conversation_history.append({
+                            'function': func_name,
+                            'parameters': args,
+                            'result': return_val,
+                            'timestamp': time.time(),
+                            'status': 'completed'
+                        })
+                        console.print("Added %s result to history" % func_name)
+                        console.print("Conversation history now has %d entries" % len(conversation_history))
                         
                         # Update memory and prompt
                         console.print("\n[cyan]Updating memory and prompt...[/cyan]")
-                        memory_message = mem_update if mem_update else f"Function {func_name} executed successfully."
-                        prompt += f"\n\nSystem: {memory_message} {state_update}"
-                        console.print("[green]Memory and prompt updated[/green]")
+                        memory_update = f"Function {func_name} was executed successfully."
+                        
+                        # Add more specific information for certain functions
+                        if func_name == "get_ascii_values" and "values" in step_results.get(f"{func_name}_values", {}):
+                            ascii_values = step_results.get(f"{func_name}_values", [])
+                            memory_update += f" The ASCII values of 'INDIA' are: {ascii_values}."
+                            
+                        if func_name == "calculate_exponential_sum":
+                            exact_sum = step_results.get("exact_exp_sum", "")
+                            memory_update += f" The sum of exponentials is: {exact_sum}. This exact value should be used in the email body."
+                        
+                        prompt += f"\n\nSystem: {memory_update}. {state_update}"
+                        console.print("Memory and prompt updated")
                             
                     except Exception as e:
                         console.print(f"\n[red]Error during execution: {str(e)}[/red]")
