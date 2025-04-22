@@ -125,11 +125,11 @@ def decide(problem: str, result: str, console: Console, conversation_history: Li
                 if "reasoning" in parameters:
                     parameters.pop("reasoning")
                 
-                # Special handling for check_consistency function
-                if function_name == "check_consistency" and "steps" in parameters:
+                # Handle steps parameter if present (for any function that uses it)
+                if "steps" in parameters:
                     # If the steps is not a list of strings, convert it
                     if not isinstance(parameters["steps"], list):
-                        console.print("[yellow]check_consistency steps is not a list, converting[/yellow]")
+                        console.print("[yellow]steps parameter is not a list, converting[/yellow]")
                         parameters["steps"] = [str(parameters["steps"])]
                     else:
                         # Convert any non-string items in the list to strings
@@ -148,16 +148,14 @@ def decide(problem: str, result: str, console: Console, conversation_history: Li
                             else:
                                 clean_steps.append(str(step))
                         parameters["steps"] = clean_steps
-                        console.print(f"[green]Cleaned check_consistency steps: {clean_steps}[/green]")
+                        console.print(f"[green]Cleaned steps parameter: {clean_steps}[/green]")
                 
-                # Special handling for send_email function
-                if function_name == "send_email":
-                    # Ensure parameters are properly formatted
-                    if "parameters" in parameters:
-                        parameters = parameters["parameters"]
-                    # Clean up any escaped quotes in the body
-                    if "body" in parameters:
-                        parameters["body"] = parameters["body"].replace('\\"', '"')
+                # Handle email parameters if present (for any function that uses them)
+                if "parameters" in parameters:
+                    parameters = parameters["parameters"]
+                # Clean up any escaped quotes in the body if present
+                if "body" in parameters:
+                    parameters["body"] = parameters["body"].replace('\\"', '"')
             
             console.print(f"[green]Processing function call:[/green] {function_name}")
             console.print(f"[blue]Parameters:[/blue] {parameters}")

@@ -69,12 +69,11 @@ async def act(session, func_name, args):
             
         console.print(f"[blue]Cleaned arguments:[/blue] {cleaned_args}")
         
-        # Apply user preferences to specific function calls
-        if func_name == "send_email":
-            # Get user preferences
-            preferences = get_cached_preferences()
-            console.print(f"[blue]Applying user preferences to email:[/blue] {preferences}")
-            
+        # Get user preferences for any function that might need them
+        preferences = get_cached_preferences()
+        
+        # Apply user preferences based on function parameters, not function name
+        if "to_email" in cleaned_args and "subject" in cleaned_args and "body" in cleaned_args:
             # Apply email format preference
             if "body" in cleaned_args and preferences.get("email_format") == "html":
                 # Check if body already has HTML tags
@@ -120,7 +119,6 @@ async def act(session, func_name, args):
                     console.print(f"[green]Added language tag to subject: {lang_tag}[/green]")
         
         # MCP tools expect parameters to be wrapped in an input_data field
-        # This is a special requirement of the MCP API
         final_args = {"input_data": cleaned_args}
         console.print(f"[blue]Final arguments for MCP:[/blue] {final_args}")
         
