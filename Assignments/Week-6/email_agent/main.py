@@ -227,18 +227,7 @@ async def main():
                         
                         # Update memory and prompt
                         console.print("\n[cyan]Updating memory and prompt...[/cyan]")
-                        memory_update = f"Function {func_name} was executed successfully."
-                        
-                        # Add more specific information for certain functions
-                        if func_name == "get_ascii_values" and "values" in step_results.get(f"{func_name}_values", {}):
-                            ascii_values = step_results.get(f"{func_name}_values", [])
-                            memory_update += f" The ASCII values of 'INDIA' are: {ascii_values}."
-                            
-                        if func_name == "calculate_exponential_sum":
-                            exact_sum = step_results.get("exact_exp_sum", "")
-                            memory_update += f" The sum of exponentials is: {exact_sum}. This exact value should be used in the email body."
-                        
-                        prompt += f"\n\nSystem: {memory_update}. {state_update}"
+                        prompt += f"\n\nSystem: {mem_update}. {state_update}"
                         console.print("Memory and prompt updated")
                             
                     except Exception as e:
