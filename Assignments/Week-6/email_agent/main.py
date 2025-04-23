@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 import json
 import time
+import re
 
 from perception import get_user_preferences, build_prompt, generate_with_timeout
 from memory import update_memory
@@ -181,6 +182,28 @@ async def main():
                         # Execute action
                         console.print(f"\n[cyan]Executing action: {func_name}[/cyan]")
                         console.print(f"[blue]Arguments: {args}[/blue]")
+                        
+                        # If this is an email sending function, ensure we use the correct calculation result
+                        if any(email_keyword in func_name.lower() for email_keyword in ['email', 'mail', 'send']):
+                            # Find the most recent calculation result
+                            calculation_result = None
+                            for key, value in step_results.items():
+                                if isinstance(value, str) and 'scientific_notation' in key:
+                                    calculation_result = value
+                                    break
+                            
+                            if calculation_result:
+                                # Keep the LLM's email body but ensure it uses the correct value
+                                if 'body' in args and args['body']:
+                                    # Replace the numeric value in the body with the calculation result
+                                    # Find the numeric value in the body (including scientific notation)
+                                    match = re.search(r'\d+(\.\d+)?(e[+-]\d+)?', args['body'])
+                                    if match:
+                                        # Replace only the numeric part with the calculation result
+                                        # Make sure we don't append any additional scientific notation
+                                        args['body'] = args['body'][:match.start()] + calculation_result + args['body'][match.end():]
+                                        console.print(f"[green]Updated email body with correct value: {calculation_result}[/green]")
+                            
                         return_val = await act(session, func_name, args)
                         
                         if return_val is None or (hasattr(return_val, 'isError') and return_val.isError):
@@ -196,17 +219,15 @@ async def main():
                                 content_text = return_val.content[0].text
                                 content = json.loads(content_text)
                                 
-                                # Don't rely on function name patterns - store all interesting data
-                                # Store values, numbers, and strings that might be useful
+                                # Store all content fields for potential future use
                                 for key, value in content.items():
                                     result_key = f"{func_name}_{key}"
                                     step_results[result_key] = value
                                     console.print(f"Stored result: {result_key} = {value}")
                                 
-                                # For calculate_exponential_sum, store exact result for future use
-                                if func_name == "calculate_exponential_sum" and "scientific_notation" in content:
-                                    step_results["exact_exp_sum"] = content["scientific_notation"]
-                                    console.print(f"[green]Stored exact exponential sum: {content['scientific_notation']}[/green]")
+                                # Store the complete result for reference
+                                step_results[f"{func_name}_complete"] = content
+                                console.print(f"[green]Stored complete result for {func_name}[/green]")
                         except Exception as e:
                             console.print(f"[yellow]Warning: Unable to parse result content: {str(e)}[/yellow]")
                             
