@@ -120,23 +120,7 @@ Task Processing Guidelines:
    - Track completed steps and avoid repeating them
 
 2. IMPORTANT FUNCTION CALL FORMAT:
-   Your function calls MUST use ONLY these parameter names - extra fields will be ignored:
-   
-   - get_ascii_values: ONLY use parameter "string"
-     Example: {{ "function": "get_ascii_values", "parameters": {{ "string": "INDIA" }} }}
-   
-   - calculate_exponential_sum: ONLY use parameter "numbers"
-     Example: {{ "function": "calculate_exponential_sum", "parameters": {{ "numbers": [73, 78, 68, 73, 65] }} }}
-   
-   - send_email: ONLY use parameters "to_email", "subject", "body", and optional "image_path"
-     Example: {{ "function": "send_email", "parameters": {{ "to_email": "user@example.com", "subject": "Result", "body": "The result is 123" }} }}
-   
-   - show_reasoning: ONLY use parameter "steps" which is an array of objects with "description", "type", and "confidence"
-     Example: {{ "function": "show_reasoning", "parameters": {{ "steps": [{{ "description": "Step 1", "type": "calculation", "confidence": 0.9 }}] }} }}
-   
-   - check_consistency: ONLY use parameter "steps" which is an array of strings (NOT function calls)
-     Example: {{ "function": "check_consistency", "parameters": {{ "steps": ["Step 1: Found ASCII values", "Step 2: Calculated exponential sum"] }} }}
-     WRONG FORMAT: {{ "function": "check_consistency", "parameters": {{ "steps": ["FUNCTION_CALL: get_ascii_values('INDIA')"] }} }}
+   Your function calls MUST use ONLY the specified parameter names. Extra fields will be ignored. Refer to the tool descriptions for details.
 
 3. When executing an action, your function call MUST be in this format:
    ```json

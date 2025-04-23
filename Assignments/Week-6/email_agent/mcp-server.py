@@ -526,8 +526,9 @@ def check_consistency(input_data: CheckConsistencyInput) -> TextResponse:
         input_data (CheckConsistencyInput): The input data containing steps to analyze
             Format: {
                 "steps": [
-                    "FUNCTION_CALL: get_ascii_values('ABC')",
-                    "FUNCTION_CALL: calculate_exponential_sum([65, 66, 67])"
+                    "Step description 1",
+                    "Step description 2",
+                    "Step description 3"
                 ]
             }
             
@@ -537,25 +538,6 @@ def check_consistency(input_data: CheckConsistencyInput) -> TextResponse:
             - issues: List of critical issues found
             - warnings: List of potential warnings
             - insights: List of analysis insights
-            
-    Example:
-        Input: {
-            "steps": [
-                "FUNCTION_CALL: get_ascii_values('ABC')",
-                "FUNCTION_CALL: calculate_exponential_sum([65, 66, 67])"
-            ]
-        }
-        Output: {
-            "consistency_score": 95.0,
-            "issues": [],
-            "warnings": ["Step 2: Large numbers might cause overflow"],
-            "insights": ["Steps follow logical sequence"]
-        }
-        
-    Error Handling:
-        - Validates step format
-        - Handles parsing errors
-        - Manages calculation errors
     """
     console.print("[blue]FUNCTION CALL:[/blue] check_consistency()")
     
@@ -568,74 +550,64 @@ def check_consistency(input_data: CheckConsistencyInput) -> TextResponse:
             header_style="bold cyan"
         )
         table.add_column("Step", style="cyan")
-        table.add_column("Expression", style="blue")
-        table.add_column("Checks", style="yellow")
+        table.add_column("Description", style="blue")
+        table.add_column("Analysis", style="yellow")
 
         issues = []
         warnings = []
         insights = []
         previous = None
         
+        # Track function calls and their results
+        function_results = {}
+        
         for i, step in enumerate(input_data.steps, 1):
-            checks = []
+            analysis = []
             
             # 1. Basic Format Check
             if not step.strip():
                 issues.append(f"Step {i}: Empty step")
-                checks.append("[red] Empty step[/red]")
+                analysis.append("[red] Empty step[/red]")
             else:
-                checks.append("[green] Format valid[/green]")
+                analysis.append("[green] Format valid[/green]")
 
             # 2. Dependency Analysis
             if previous:
-                if str(previous) in step:
-                    checks.append("[green] Uses previous result[/green]")
+                # Check if current step references previous step's result
+                if any(result in step for result in function_results.values()):
+                    analysis.append("[green] Uses previous result[/green]")
                     insights.append(f"Step {i} builds on step {i-1}")
                 else:
-                    checks.append("[blue]○ Independent step[/blue]")
+                    analysis.append("[blue]○ Independent step[/blue]")
 
-            # 3. Pattern Analysis
-            if "FUNCTION_CALL" in step:
-                checks.append("[green] Valid function call[/green]")
+            # 3. Function Analysis
+            # Extract function name if present
+            function_match = re.search(r"Executed (\w+) function", step)
+            if function_match:
+                function_name = function_match.group(1)
+                analysis.append(f"[green] Valid {function_name} operation[/green]")
                 
-                # Email-specific checks
-                if "send_email" in step:
-                    try:
-                        step_data = json.loads(step)
-                        params = step_data.get("parameters", {})
-                        
-                        # Check email format
-                        if not re.match(r"[^@]+@[^@]+\.[^@]+", params.get("to_email", "")):
-                            issues.append(f"Step {i}: Invalid email format")
-                            checks.append("[red] Invalid email format[/red]")
-                            
-                        # Check subject length
-                        subject = params.get("subject", "")
-                        if len(subject) > 100:
-                            warnings.append(f"Step {i}: Subject too long ({len(subject)} chars)")
-                            checks.append("[yellow] Subject too long[/yellow]")
-                            
-                        # Check body length
-                        body = params.get("body", "")
-                        if len(body) > 10000:
-                            warnings.append(f"Step {i}: Body too long ({len(body)} chars)")
-                            checks.append("[yellow] Body too long[/yellow]")
-                            
-                    except json.JSONDecodeError:
-                        warnings.append(f"Step {i}: Could not parse function call")
-                        checks.append("[yellow] Parse error[/yellow]")
-                        
-            elif "FINAL_ANSWER" in step:
-                checks.append("[green] Valid final answer[/green]")
+                # Store function result for dependency tracking
+                if "result" in step.lower():
+                    result_match = re.search(r"result:?\s*([^\n]+)", step, re.IGNORECASE)
+                    if result_match:
+                        function_results[function_name] = result_match.group(1).strip()
             else:
-                warnings.append(f"Step {i}: Unrecognized format")
-                checks.append("[yellow]! Format warning[/yellow]")
+                # Generic step analysis
+                if "error" in step.lower():
+                    issues.append(f"Step {i}: Contains error indication")
+                    analysis.append("[red] Error detected[/red]")
+                elif "warning" in step.lower():
+                    warnings.append(f"Step {i}: Contains warning")
+                    analysis.append("[yellow] Warning detected[/yellow]")
+                else:
+                    analysis.append("[blue]○ Generic step[/blue]")
 
             # Add row to table
             table.add_row(
                 f"Step {i}",
                 step,
-                "\n".join(checks)
+                "\n".join(analysis)
             )
             
             previous = step

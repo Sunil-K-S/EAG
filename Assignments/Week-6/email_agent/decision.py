@@ -72,6 +72,11 @@ def decide(problem: str, result: str, console: Console, conversation_history: Li
         json_start = result.find('FUNCTION_CALL:')
         if json_start != -1:
             json_str = result[json_start + len('FUNCTION_CALL:'):].strip()
+            # Ensure the extracted string is valid JSON
+            if not json_str.startswith('{'):
+                json_str = '{"steps": [' + json_str
+            if not json_str.endswith(']}'):
+                json_str = json_str + ']}'
             console.print("[dim]Found FUNCTION_CALL format[/dim]")
         
         # Format 2: Direct JSON - look for JSON block in backticks
@@ -156,6 +161,48 @@ def decide(problem: str, result: str, console: Console, conversation_history: Li
                 # Clean up any escaped quotes in the body if present
                 if "body" in parameters:
                     parameters["body"] = parameters["body"].replace('\\"', '"')
+            
+            # Update the logic for constructing the `steps` parameter for `show_reasoning`
+            if function_name == "show_reasoning":
+                if "steps" in parameters:
+                    # Ensure steps is a list of dictionaries
+                    clean_steps = []
+                    for step in parameters["steps"]:
+                        if isinstance(step, dict):
+                            clean_steps.append(step)
+                        else:
+                            # Convert string representation to dictionary
+                            try:
+                                step_dict = json.loads(step.replace("'", '"'))
+                                clean_steps.append(step_dict)
+                            except json.JSONDecodeError:
+                                console.print(f"[yellow]Invalid step format, skipping: {step}[/yellow]")
+                    parameters["steps"] = clean_steps
+                    console.print(f"[green]Cleaned steps parameter for show_reasoning: {clean_steps}[/green]")
+
+            # Update the logic for constructing the `steps` parameter for `check_consistency`
+            if function_name == "check_consistency":
+                if "steps" in parameters:
+                    # Ensure steps is a list of descriptive strings
+                    clean_steps = []
+                    for step in parameters["steps"]:
+                        if isinstance(step, str):
+                            # If it's a FUNCTION_CALL format, extract a simple description
+                            if "FUNCTION_CALL:" in step:
+                                # Extract function name and create a proper step description
+                                match = re.search(r"FUNCTION_CALL:\s*(\w+)", step)
+                                if match:
+                                    func_name = match.group(1)
+                                    clean_steps.append(f"Executed {func_name} function")
+                                else:
+                                    clean_steps.append("Performed a function call")
+                            else:
+                                clean_steps.append(step)
+                        else:
+                            # Convert non-string steps to descriptive strings
+                            clean_steps.append(str(step))
+                    parameters["steps"] = clean_steps
+                    console.print(f"[green]Cleaned steps parameter for check_consistency: {clean_steps}[/green]")
             
             console.print(f"[green]Processing function call:[/green] {function_name}")
             console.print(f"[blue]Parameters:[/blue] {parameters}")

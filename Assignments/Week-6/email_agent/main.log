@@ -4,19 +4,26 @@ Conversation history initialized
 ╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Current Preferences:                                                                                                                                                               │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-language: es
-priority: high
+language: fr
+priority: normal
 email_format: html
 verification_level: standard
 
-Do you want to modify these preferences? (yes/no): no
+Do you want to modify these preferences? (yes/no): yes
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Please provide new preferences:                                                                                                                                                    │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Preferred language (en/fr/es): es
+Task priority (low/normal/high): high
+Email format (plain/html): html
+Verification level (basic/standard/strict): standard
 User preferences loaded
 
 Initializing MCP connection...
 MCP connection established
 
 Fetching available tools...
-[04/20/25 23:43:33] INFO     Processing request of type ListToolsRequest                                                                                                 server.py:534
+[04/23/25 21:54:04] INFO     Processing request of type ListToolsRequest                                                                                                 server.py:534
 Found 5 tools
 Available functions: ['get_ascii_values', 'calculate_exponential_sum', 'send_email', 'show_reasoning', 'check_consistency']
 Tools description created
@@ -33,13 +40,13 @@ Getting LLM response...
 
 Assistant: Okay, I understand the task. Here's the plan:
 
-1.  **Find ASCII values:** Use `get_ascii_values` to convert "INDIA" to its ASCII representation.
-2.  **Calculate exponential sum:** Use `calculate_exponential_sum` to calculate the sum of exponentials of the ASCII values obtained in the previous step.
-3.  **Send email:** Use `send_email` to send the final result to "sunilks.eminem@gmail.com".
-4.  **Show reasoning:** Use `show_reasoning` to display the steps taken.
-5.  **Check consistency:** Use `check_consistency` to ensure the steps are logically sound.
+1.  **Get ASCII values:** Use `get_ascii_values` to find the ASCII values of the characters in the word "INDIA".
+2.  **Calculate exponential sum:** Use `calculate_exponential_sum` to calculate the sum of exponentials (e^value) for each ASCII value obtained in the previous step.
+3.  **Send email:** Use `send_email` to send an email containing the calculated sum to the specified email address.
+4.  **Show reasoning:** Use `show_reasoning` to display the reasoning process.
+5.  **Check consistency:** Use `check_consistency` to check the consistency of the steps.
 
-Here's the first function call:
+Here's the first step:
 
 ```json
 {
@@ -76,7 +83,7 @@ Executing: get_ascii_values
 Original arguments: {'string': 'INDIA'}
 Cleaned arguments: {'string': 'INDIA'}
 Final arguments for MCP: {'input_data': {'string': 'INDIA'}}
-[04/20/25 23:43:35] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
+[04/23/25 21:54:06] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
 Result: {
   "values": [
     73,
@@ -104,13 +111,13 @@ Getting LLM response...
 
 Assistant: Okay, I understand the task. Here's the plan:
 
-1.  **Get ASCII values of "INDIA"**: Use the `get_ascii_values` tool to convert the string "INDIA" into a list of ASCII values.
-2.  **Calculate the sum of exponentials**: Use the `calculate_exponential_sum` tool to calculate the sum of e raised to each of the ASCII values obtained in the previous step.
-3.  **Send the email**: Use the `send_email` tool to send an email to "sunilks.eminem@gmail.com" with the calculated sum.
-4.  **Show reasoning**: Use the `show_reasoning` tool to display the steps taken.
-5.  **Check consistency**: Use the `check_consistency` tool to validate the steps taken.
+1.  **Get ASCII values of "INDIA":** Use the `get_ascii_values` tool to convert the string "INDIA" into a list of ASCII values.
+2.  **Calculate the sum of exponentials:** Use the `calculate_exponential_sum` tool to calculate the sum of e raised to each of the ASCII values obtained in the previous step.
+3.  **Send the result via email:** Use the `send_email` tool to send an email containing the calculated sum to the specified email address.
+4.  **Show reasoning:** Use the `show_reasoning` tool to display the reasoning process.
+5.  **Check consistency:** Use the `check_consistency` tool to analyze the steps for logical consistency.
 
-Here's the first function call:
+Here's the first function call to get the ASCII values:
 
 ```json
 {
@@ -128,7 +135,7 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 1
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}]
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}]
 Found completed step: get_ascii_values
 Completed steps: ['get_ascii_values']
 Completed functions: {'get_ascii_values'}
@@ -146,10 +153,7 @@ Iteration 3/10
 
 Getting LLM response...
 
-Assistant: Okay, I understand. I have already executed `get_ascii_values` and have the ASCII values for "INDIA". Now I need to calculate the sum of exponentials of those values. 
-Then, I'll send the result via email. Finally, I will show the reasoning and check consistency.
-
-Here's the next step:
+Assistant: Okay, I have the ASCII values of "INDIA". Now I need to calculate the sum of exponentials of these values.
 
 ```json
 {
@@ -167,7 +171,7 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 1
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}]
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}]
 Found completed step: get_ascii_values
 Completed steps: ['get_ascii_values']
 Completed functions: {'get_ascii_values'}
@@ -187,7 +191,7 @@ Executing: calculate_exponential_sum
 Original arguments: {'numbers': [73, 78, 68, 73, 65]}
 Cleaned arguments: {'numbers': [73, 78, 68, 73, 65]}
 Final arguments for MCP: {'input_data': {'numbers': [73, 78, 68, 73, 65]}}
-[04/20/25 23:43:38] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
+[04/23/25 21:54:09] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
 Result: {
   "sum": "7599822246093079795956050466422590.5547098797815855",
   "numbers": [
@@ -237,8 +241,8 @@ Assistant: Okay, I have the ASCII values and their exponential sum. Now I need t
   "function": "send_email",
   "parameters": {
     "to_email": "sunilks.eminem@gmail.com",
-    "subject": "Resultado del cálculo exponencial de ASCII",
-    "body": "La suma de los exponenciales de los valores ASCII de 'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"
+    "subject": "ASCII Exponential Sum of INDIA",
+    "body": "The sum of exponentials of the ASCII values of the word INDIA is: 7.5998222460930797959560504664225905547098797815855e+33"
   }
 }
 ```
@@ -250,12 +254,12 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 2
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}, {'function': 
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}, {'function': 
 'calculate_exponential_sum', 'parameters': {'numbers': [73, 78, 68, 73, 65]}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"sum": 
 "7599822246093079795956050466422590.5547098797815855", "numbers": [73, 78, 68, 73, 65], "count": 5, "scientific_notation": "7.5998222460930797959560504664225905547098797815855e+33", 
 "details": {"individual_exponentials": ["50523936302761041945570383321857.646485367244975604", "7498416996990120434675630591224060.4547046589777841", 
 "340427604993174052137690718700.43505953738761399448", "50523936302761041945570383321857.646485367244975604", "16948892444103337141417836114.371974948926236225513"], "precision": 50,
-"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745172818.465743, 'status': 'completed'}]
+"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745425449.330671, 'status': 'completed'}]
 Found completed step: get_ascii_values
 Found completed step: calculate_exponential_sum
 Completed steps: ['get_ascii_values', 'calculate_exponential_sum']
@@ -267,37 +271,36 @@ Extracted JSON: {
     "to_email": "sunilks.eminem@gmail.com",
     "sub...
 Processing function call: send_email
-Parameters: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores ASCII de 'INDIA' 
-es: 7.5998222460930797959560504664225905547098797815855e+33"}
+Parameters: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word INDIA is: 
+7.5998222460930797959560504664225905547098797815855e+33'}
 
 Executing action: send_email
-Arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores ASCII de 'INDIA' es:
-7.5998222460930797959560504664225905547098797815855e+33"}
+Arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word INDIA is: 
+7.5998222460930797959560504664225905547098797815855e+33'}
 
 Executing: send_email
-Original arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores ASCII de 
-'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"}
-Cleaned arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores ASCII de 
-'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"}
-Applying user preferences to email: {'language': 'es', 'priority': 'high', 'email_format': 'html', 'verification_level': 'standard'}
+Original arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word INDIA is: 
+7.5998222460930797959560504664225905547098797815855e+33'}
+Cleaned arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word INDIA is: 
+7.5998222460930797959560504664225905547098797815855e+33'}
 Converted email body to HTML format
 Added language tag to subject: [ES] 
-Final arguments for MCP: {'input_data': {'to_email': 'sunilks.eminem@gmail.com', 'subject': '[ES] Resultado del cálculo exponencial de ASCII', 'body': '\n                    <html>\n
+Final arguments for MCP: {'input_data': {'to_email': 'sunilks.eminem@gmail.com', 'subject': '[ES] ASCII Exponential Sum of INDIA', 'body': '\n                    <html>\n            
 <body>\n                        <div style="font-family: Arial, sans-serif; color: #CC0000;">\n                            <h2>Email Agent Result</h2>\n                            
-<p>La suma de los exponenciales de los valores ASCII de \'INDIA\' es: 7.5998222460930797959560504664225905547098797815855e+33</p>\n                            <hr>\n                 
+<p>The sum of exponentials of the ASCII values of the word INDIA is: 7.5998222460930797959560504664225905547098797815855e+33</p>\n                            <hr>\n                  
 <p style="font-size: 12px; color: #666666;">\n                                Sent by Email Agent<br>\n                                Language: es<br>\n                             
 Priority: high\n                            </p>\n                        </div>\n                    </body>\n                    </html>\n                    '}}
-[04/20/25 23:43:39] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
+[04/23/25 21:54:10] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
                     INFO     file_cache is only supported with oauth2client<4.0.0                                                                                       __init__.py:49
 Result: {
-  "message_id": "1965467f16f6198f",
+  "message_id": "1966376c97bff2e1",
   "to": "sunilks.eminem@gmail.com",
-  "subject": "[ES] Resultado del c\u00e1lculo exponencial de ASCII",
+  "subject": "[ES] ASCII Exponential Sum of INDIA",
   "status": "success"
 }
-Stored result: send_email_message_id = 1965467f16f6198f
+Stored result: send_email_message_id = 1966376c97bff2e1
 Stored result: send_email_to = sunilks.eminem@gmail.com
-Stored result: send_email_subject = [ES] Resultado del cálculo exponencial de ASCII
+Stored result: send_email_subject = [ES] ASCII Exponential Sum of INDIA
 Stored result: send_email_status = success
 Marked send_email as completed
 Added send_email result to history
@@ -315,8 +318,9 @@ Assistant: ```json
   "function": "send_email",
   "parameters": {
     "to_email": "sunilks.eminem@gmail.com",
-    "subject": "Resultado del cálculo exponencial",
-    "body": "El resultado de la suma exponencial de los valores ASCII de 'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"
+    "subject": "ASCII Exponential Sum of INDIA",
+    "body": "The sum of exponentials of the ASCII values of the word INDIA is: 7.5998222460930797959560504664225905547098797815855e+33",
+    "image_path": null
   }
 }
 ```
@@ -328,21 +332,21 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 3
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}, {'function': 
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}, {'function': 
 'calculate_exponential_sum', 'parameters': {'numbers': [73, 78, 68, 73, 65]}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"sum": 
 "7599822246093079795956050466422590.5547098797815855", "numbers": [73, 78, 68, 73, 65], "count": 5, "scientific_notation": "7.5998222460930797959560504664225905547098797815855e+33", 
 "details": {"individual_exponentials": ["50523936302761041945570383321857.646485367244975604", "7498416996990120434675630591224060.4547046589777841", 
 "340427604993174052137690718700.43505953738761399448", "50523936302761041945570383321857.646485367244975604", "16948892444103337141417836114.371974948926236225513"], "precision": 50,
-"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745172818.465743, 'status': 'completed'}, {'function': 
-'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores 
-ASCII de 'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": 
-"1965467f16f6198f", "to": "sunilks.eminem@gmail.com", "subject": "[ES] Resultado del c\\u00e1lculo exponencial de ASCII", "status": "success"}', annotations=None)], isError=False), 
-'timestamp': 1745172820.583636, 'status': 'completed'}]
+"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745425449.330671, 'status': 'completed'}, {'function': 
+'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word 
+INDIA is: 7.5998222460930797959560504664225905547098797815855e+33'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": "1966376c97bff2e1", 
+"to": "sunilks.eminem@gmail.com", "subject": "[ES] ASCII Exponential Sum of INDIA", "status": "success"}', annotations=None)], isError=False), 'timestamp': 1745425451.289587, 
+'status': 'completed'}]
 Found completed step: get_ascii_values
 Found completed step: calculate_exponential_sum
 Found completed step: send_email
 Completed steps: ['get_ascii_values', 'calculate_exponential_sum', 'send_email']
-Completed functions: {'send_email', 'calculate_exponential_sum', 'get_ascii_values'}
+Completed functions: {'calculate_exponential_sum', 'send_email', 'get_ascii_values'}
 Found JSON in code block
 Extracted JSON: {
   "function": "send_email",
@@ -362,23 +366,23 @@ Assistant: ```json
   "parameters": {
     "steps": [
       {
-        "description": "Obtener los valores ASCII de la palabra 'INDIA'",
-        "type": "ejecución",
+        "description": "The user asked to find the ASCII values of the word 'INDIA', calculate the sum of exponentials of those values, and email the result.",
+        "type": "understanding",
         "confidence": 1
       },
       {
-        "description": "Calcular la suma exponencial de los valores ASCII obtenidos",
-        "type": "ejecución",
+        "description": "First, I used the 'get_ascii_values' tool to get the ASCII values of the characters in the word 'INDIA'.",
+        "type": "execution",
         "confidence": 1
       },
       {
-        "description": "Enviar un correo electrónico con el resultado al usuario",
-        "type": "ejecución",
+        "description": "Second, I used the 'calculate_exponential_sum' tool to calculate the sum of exponentials of the ASCII values obtained in the previous step.",
+        "type": "execution",
         "confidence": 1
       },
       {
-        "description": "Mostrar el razonamiento seguido para resolver el problema",
-        "type": "ejecución",
+        "description": "Third, I used the 'send_email' tool to send an email containing the calculated sum of exponentials to the specified email address.",
+        "type": "execution",
         "confidence": 1
       }
     ]
@@ -393,49 +397,53 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 3
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}, {'function': 
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}, {'function': 
 'calculate_exponential_sum', 'parameters': {'numbers': [73, 78, 68, 73, 65]}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"sum": 
 "7599822246093079795956050466422590.5547098797815855", "numbers": [73, 78, 68, 73, 65], "count": 5, "scientific_notation": "7.5998222460930797959560504664225905547098797815855e+33", 
 "details": {"individual_exponentials": ["50523936302761041945570383321857.646485367244975604", "7498416996990120434675630591224060.4547046589777841", 
 "340427604993174052137690718700.43505953738761399448", "50523936302761041945570383321857.646485367244975604", "16948892444103337141417836114.371974948926236225513"], "precision": 50,
-"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745172818.465743, 'status': 'completed'}, {'function': 
-'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores 
-ASCII de 'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": 
-"1965467f16f6198f", "to": "sunilks.eminem@gmail.com", "subject": "[ES] Resultado del c\\u00e1lculo exponencial de ASCII", "status": "success"}', annotations=None)], isError=False), 
-'timestamp': 1745172820.583636, 'status': 'completed'}]
+"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745425449.330671, 'status': 'completed'}, {'function': 
+'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word 
+INDIA is: 7.5998222460930797959560504664225905547098797815855e+33'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": "1966376c97bff2e1", 
+"to": "sunilks.eminem@gmail.com", "subject": "[ES] ASCII Exponential Sum of INDIA", "status": "success"}', annotations=None)], isError=False), 'timestamp': 1745425451.289587, 
+'status': 'completed'}]
 Found completed step: get_ascii_values
 Found completed step: calculate_exponential_sum
 Found completed step: send_email
 Completed steps: ['get_ascii_values', 'calculate_exponential_sum', 'send_email']
-Completed functions: {'send_email', 'calculate_exponential_sum', 'get_ascii_values'}
+Completed functions: {'calculate_exponential_sum', 'send_email', 'get_ascii_values'}
 Found JSON in code block
 Extracted JSON: {
   "function": "show_reasoning",
   "parameters": {
     "steps": [
       {
-        "description": "O...
+        "description": "T...
+Cleaned steps parameter: ['{\'description\': "The user asked to find the ASCII values of the word \'INDIA\', calculate the sum of exponentials of those values, and email the 
+result.", \'type\': \'understanding\', \'confidence\': 1}', '{\'description\': "First, I used the \'get_ascii_values\' tool to get the ASCII values of the characters in the word 
+\'INDIA\'.", \'type\': \'execution\', \'confidence\': 1}', '{\'description\': "Second, I used the \'calculate_exponential_sum\' tool to calculate the sum of exponentials of the ASCII
+values obtained in the previous step.", \'type\': \'execution\', \'confidence\': 1}', '{\'description\': "Third, I used the \'send_email\' tool to send an email containing the 
+calculated sum of exponentials to the specified email address.", \'type\': \'execution\', \'confidence\': 1}']
+Invalid step format, skipping: {'description': "The user asked to find the ASCII values of the word 'INDIA', calculate the sum of exponentials of those values, and email the 
+result.", 'type': 'understanding', 'confidence': 1}
+Invalid step format, skipping: {'description': "First, I used the 'get_ascii_values' tool to get the ASCII values of the characters in the word 'INDIA'.", 'type': 'execution', 
+'confidence': 1}
+Invalid step format, skipping: {'description': "Second, I used the 'calculate_exponential_sum' tool to calculate the sum of exponentials of the ASCII values obtained in the previous 
+step.", 'type': 'execution', 'confidence': 1}
+Invalid step format, skipping: {'description': "Third, I used the 'send_email' tool to send an email containing the calculated sum of exponentials to the specified email address.", 
+'type': 'execution', 'confidence': 1}
+Cleaned steps parameter for show_reasoning: []
 Processing function call: show_reasoning
-Parameters: {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular la suma exponencial de los 
-valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar un correo electrónico con el resultado al usuario', 'type': 'ejecución', 'confidence': 1}, 
-{'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 'ejecución', 'confidence': 1}]}
+Parameters: {'steps': []}
 
 Executing action: show_reasoning
-Arguments: {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular la suma exponencial de los 
-valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar un correo electrónico con el resultado al usuario', 'type': 'ejecución', 'confidence': 1}, 
-{'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 'ejecución', 'confidence': 1}]}
+Arguments: {'steps': []}
 
 Executing: show_reasoning
-Original arguments: {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular la suma exponencial
-de los valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar un correo electrónico con el resultado al usuario', 'type': 'ejecución', 'confidence':
-1}, {'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 'ejecución', 'confidence': 1}]}
-Cleaned arguments: {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular la suma exponencial 
-de los valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar un correo electrónico con el resultado al usuario', 'type': 'ejecución', 'confidence':
-1}, {'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 'ejecución', 'confidence': 1}]}
-Final arguments for MCP: {'input_data': {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular
-la suma exponencial de los valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar un correo electrónico con el resultado al usuario', 'type': 
-'ejecución', 'confidence': 1}, {'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 'ejecución', 'confidence': 1}]}}
-[04/20/25 23:43:43] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
+Original arguments: {'steps': []}
+Cleaned arguments: {'steps': []}
+Final arguments for MCP: {'input_data': {'steps': []}}
+[04/23/25 21:54:14] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
 Result: {
   "content": {
     "type": "text",
@@ -460,9 +468,9 @@ Assistant: ```json
   "function": "check_consistency",
   "parameters": {
     "steps": [
-      "Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]",
-      "Step 2: Calculated the sum of exponentials for the ASCII values",
-      "Step 3: Sent the calculated sum to sunilks.eminem@gmail.com"
+      "Find the ASCII values of characters in the word INDIA",
+      "Calculate the sum of exponentials of those ASCII values",
+      "Mail the final answer to sunilks.eminem@gmail.com"
     ]
   }
 }
@@ -475,62 +483,59 @@ Problem: Find the ASCII values of characters in the word "INDIA", then calculate
 "sunilks.eminem@gmail.com"
 Current conversation history length: 4
 Conversation history: [{'function': 'get_ascii_values', 'parameters': {'string': 'INDIA'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"values": [73,
-78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745172815.4512541, 'status': 'completed'}, {'function': 
+78, 68, 73, 65], "string": "INDIA", "length": 5}', annotations=None)], isError=False), 'timestamp': 1745425446.33511, 'status': 'completed'}, {'function': 
 'calculate_exponential_sum', 'parameters': {'numbers': [73, 78, 68, 73, 65]}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"sum": 
 "7599822246093079795956050466422590.5547098797815855", "numbers": [73, 78, 68, 73, 65], "count": 5, "scientific_notation": "7.5998222460930797959560504664225905547098797815855e+33", 
 "details": {"individual_exponentials": ["50523936302761041945570383321857.646485367244975604", "7498416996990120434675630591224060.4547046589777841", 
 "340427604993174052137690718700.43505953738761399448", "50523936302761041945570383321857.646485367244975604", "16948892444103337141417836114.371974948926236225513"], "precision": 50,
-"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745172818.465743, 'status': 'completed'}, {'function': 
-'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Resultado del cálculo exponencial de ASCII', 'body': "La suma de los exponenciales de los valores 
-ASCII de 'INDIA' es: 7.5998222460930797959560504664225905547098797815855e+33"}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": 
-"1965467f16f6198f", "to": "sunilks.eminem@gmail.com", "subject": "[ES] Resultado del c\\u00e1lculo exponencial de ASCII", "status": "success"}', annotations=None)], isError=False), 
-'timestamp': 1745172820.583636, 'status': 'completed'}, {'function': 'show_reasoning', 'parameters': {'steps': [{'description': "Obtener los valores ASCII de la palabra 'INDIA'", 
-'type': 'ejecución', 'confidence': 1}, {'description': 'Calcular la suma exponencial de los valores ASCII obtenidos', 'type': 'ejecución', 'confidence': 1}, {'description': 'Enviar 
-un correo electrónico con el resultado al usuario', 'type': 'ejecución', 'confidence': 1}, {'description': 'Mostrar el razonamiento seguido para resolver el problema', 'type': 
-'ejecución', 'confidence': 1}]}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"content": {"type": "text", "text": "Reasoning shown", "annotations": 
-null}}', annotations=None)], isError=False), 'timestamp': 1745172823.7127, 'status': 'completed'}]
+"e_value_used": "2.71828182845904523536028747135266249775724709369995"}}', annotations=None)], isError=False), 'timestamp': 1745425449.330671, 'status': 'completed'}, {'function': 
+'send_email', 'parameters': {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'ASCII Exponential Sum of INDIA', 'body': 'The sum of exponentials of the ASCII values of the word 
+INDIA is: 7.5998222460930797959560504664225905547098797815855e+33'}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"message_id": "1966376c97bff2e1", 
+"to": "sunilks.eminem@gmail.com", "subject": "[ES] ASCII Exponential Sum of INDIA", "status": "success"}', annotations=None)], isError=False), 'timestamp': 1745425451.289587, 
+'status': 'completed'}, {'function': 'show_reasoning', 'parameters': {'steps': []}, 'result': CallToolResult(meta=None, content=[TextContent(type='text', text='{"content": {"type": 
+"text", "text": "Reasoning shown", "annotations": null}}', annotations=None)], isError=False), 'timestamp': 1745425454.697473, 'status': 'completed'}]
 Found completed step: get_ascii_values
 Found completed step: calculate_exponential_sum
 Found completed step: send_email
 Found completed step: show_reasoning
 Completed steps: ['get_ascii_values', 'calculate_exponential_sum', 'send_email', 'show_reasoning']
-Completed functions: {'send_email', 'show_reasoning', 'calculate_exponential_sum', 'get_ascii_values'}
+Completed functions: {'calculate_exponential_sum', 'show_reasoning', 'send_email', 'get_ascii_values'}
 Found JSON in code block
 Extracted JSON: {
   "function": "check_consistency",
   "parameters": {
     "steps": [
-      "Step 1: Converted 'INDI...
-Cleaned check_consistency steps: ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII values', 'Step 3: Sent 
-the calculated sum to sunilks.eminem@gmail.com']
+      "Find the ASCII values o...
+Cleaned steps parameter: ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final answer to 
+sunilks.eminem@gmail.com']
+Cleaned steps parameter for check_consistency: ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final 
+answer to sunilks.eminem@gmail.com']
 Processing function call: check_consistency
-Parameters: {'steps': ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII values', 'Step 3: Sent the 
-calculated sum to sunilks.eminem@gmail.com']}
+Parameters: {'steps': ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final answer to 
+sunilks.eminem@gmail.com']}
 
 Executing action: check_consistency
-Arguments: {'steps': ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII values', 'Step 3: Sent the 
-calculated sum to sunilks.eminem@gmail.com']}
+Arguments: {'steps': ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final answer to 
+sunilks.eminem@gmail.com']}
 
 Executing: check_consistency
-Original arguments: {'steps': ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII values', 'Step 3: Sent the
-calculated sum to sunilks.eminem@gmail.com']}
-Cleaned arguments: {'steps': ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII values', 'Step 3: Sent the 
-calculated sum to sunilks.eminem@gmail.com']}
-Final arguments for MCP: {'input_data': {'steps': ["Step 1: Converted 'INDIA' to ASCII values: [73, 78, 68, 73, 65]", 'Step 2: Calculated the sum of exponentials for the ASCII 
-values', 'Step 3: Sent the calculated sum to sunilks.eminem@gmail.com']}}
-[04/20/25 23:43:45] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
+Original arguments: {'steps': ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final answer to 
+sunilks.eminem@gmail.com']}
+Cleaned arguments: {'steps': ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final answer to 
+sunilks.eminem@gmail.com']}
+Final arguments for MCP: {'input_data': {'steps': ['Find the ASCII values of characters in the word INDIA', 'Calculate the sum of exponentials of those ASCII values', 'Mail the final
+answer to sunilks.eminem@gmail.com']}}
+[04/23/25 21:54:15] INFO     Processing request of type CallToolRequest                                                                                                  server.py:534
                     INFO     Warning: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in server.py:524
                              V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.10/migration/                                                                     
 Result: {
   "content": {
     "type": "text",
-    "text": "{'consistency_score': 66.66666666666666, 'issues': [], 'warnings': ['Step 1: Unrecognized format', 'Step 2: Unrecognized format', 'Step 3: Unrecognized format'], 
-'insights': []}",
+    "text": "{'consistency_score': 100.0, 'issues': [], 'warnings': [], 'insights': []}",
     "annotations": null
   }
 }
-Stored result: check_consistency_content = {'type': 'text', 'text': "{'consistency_score': 66.66666666666666, 'issues': [], 'warnings': ['Step 1: Unrecognized format', 'Step 2: 
-Unrecognized format', 'Step 3: Unrecognized format'], 'insights': []}", 'annotations': None}
+Stored result: check_consistency_content = {'type': 'text', 'text': "{'consistency_score': 100.0, 'issues': [], 'warnings': [], 'insights': []}", 'annotations': None}
 Marked check_consistency as completed
 Added check_consistency result to history
 Conversation history now has 5 entries
