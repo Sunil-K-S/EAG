@@ -1,20 +1,22 @@
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 import numpy as np
-from scipy.spatial.distance import cosine
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from scipy.spatial.distance import cosine
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-def get_embedding(text: str, task="RETRIEVAL_DOCUMENT") -> np.ndarray:
-    res = client.models.embed_content(
-        model="gemini-embedding-exp-03-07",
-        contents=text,
-        config=types.EmbedContentConfig(task_type=task)
+def get_embedding(text, model="models/embedding-001"):
+    res = genai.embed_content(
+        model=model,
+        content=text,
+        task_type="retrieval_document"
     )
-    return np.array(res.embeddings[0].values, dtype=np.float32)
+    return np.array(res['embedding'], dtype=np.float32)
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 # 🎯 Phrases to compare
 sentences = [
@@ -24,15 +26,15 @@ sentences = [
     "Explain how neural networks learn."
 ]
 
-# 🧠 Get embeddings
-embeddings = [get_embedding(s) for s in sentences]
+models = ["models/embedding-001", "models/text-embedding-004", "models/gemini-embedding-exp-03-07"]
 
-# 🔁 Compare all pairs using cosine similarity
-def cosine_similarity(v1, v2):
-    return 1 - cosine(v1, v2)  # 1 = perfect match
-
-print("🔍 Semantic Similarity Matrix:\n")
-for i in range(len(sentences)):
-    for j in range(i + 1, len(sentences)):
-        sim = cosine_similarity(embeddings[i], embeddings[j])
-        print(f"\"{sentences[i]}\" ↔ \"{sentences[j]}\" → similarity = {sim:.3f}")
+for model in models:
+    print(f"\nUsing model: {model}")
+    embeddings = [get_embedding(s, model) for s in sentences]
+    
+    # Compare all pairs
+    print("🔍 Semantic Similarity Matrix:\n")
+    for i in range(len(sentences)):
+        for j in range(i + 1, len(sentences)):
+            sim = cosine_similarity(embeddings[i], embeddings[j])
+            print(f"\"{sentences[i]}\" ↔ \"{sentences[j]}\" → similarity = {sim:.3f}")
