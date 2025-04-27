@@ -1,8 +1,8 @@
-from perception import PerceptionResult
+from perception import PerceptionResult, YouTubeMetadata
 from memory import MemoryItem
-from typing import List, Optional
+from typing import List, Optional, Dict
 from dotenv import load_dotenv
-from google import genai
+import google.generativeai as genai
 import os
 
 # Optional: import log from agent if shared, else define locally
@@ -14,8 +14,38 @@ except ImportError:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         print(f"[{now}] [{stage}] {msg}")
 
+# Load environment variables
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Configure the API key
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+def is_youtube_query(perception: PerceptionResult) -> bool:
+    """Check if the query is YouTube-related."""
+    return (perception.youtube_metadata is not None and 
+            (perception.youtube_metadata.video_id is not None or 
+             perception.youtube_metadata.action is not None))
+
+def generate_youtube_plan(perception: PerceptionResult, memory_items: List[MemoryItem]) -> str:
+    """Generate a plan specifically for YouTube-related queries."""
+    metadata = perception.youtube_metadata
+    
+    if metadata.action == "process":
+        return f"FUNCTION_CALL: youtube_tool|action=process|url=https://www.youtube.com/watch?v={metadata.video_id}"
+    
+    elif metadata.action == "search":
+        # Check if video is already processed
+        video_processed = any(
+            item.type == "youtube_chunk" and 
+            item.youtube_metadata and 
+            item.youtube_metadata.video_id == metadata.video_id
+            for item in memory_items
+        )
+        
+        if not video_processed:
+            return f"FUNCTION_CALL: youtube_tool|action=process|url=https://www.youtube.com/watch?v={metadata.video_id}"
+        
+        return f"FUNCTION_CALL: youtube_tool|action=search|url=https://www.youtube.com/watch?v={metadata.video_id}|query={perception.user_input}"
 
 def generate_plan(
     perception: PerceptionResult,
@@ -24,65 +54,67 @@ def generate_plan(
 ) -> str:
     """Generates a plan (tool call or final answer) using LLM based on structured perception and memory."""
 
+    # Handle YouTube-specific queries first
+    if is_youtube_query(perception):
+        return generate_youtube_plan(perception, memory_items)
+
     memory_texts = "\n".join(f"- {m.text}" for m in memory_items) or "None"
 
     tool_context = f"\nYou have access to the following tools:\n{tool_descriptions}" if tool_descriptions else ""
 
     prompt = f"""
-You are a reasoning-driven AI agent with access to tools. Your job is to solve the user's request step-by-step by reasoning through the problem, selecting a tool if needed, and continuing until the FINAL_ANSWER is produced.{tool_context}
+    You are a reasoning-driven AI agent with access to tools. Your job is to solve the user's request step-by-step by reasoning through the problem, selecting a tool if needed, and continuing until the FINAL_ANSWER is produced.{tool_context}
 
-Always follow this loop:
+    Always follow this loop:
 
-1. Think step-by-step about the problem.
-2. If a tool is needed, respond using the format:
-   FUNCTION_CALL: tool_name|param1=value1|param2=value2
-3. When the final answer is known, respond using:
-   FINAL_ANSWER: [your final result]
+    1. Think step-by-step about the problem.
+    2. If a tool is needed, respond using the format:
+       FUNCTION_CALL: tool_name|param1=value1|param2=value2
+    3. When the final answer is known, respond using:
+       FINAL_ANSWER: [your final result]
 
-Guidelines:
-- Respond using EXACTLY ONE of the formats above per step.
-- Do NOT include extra text, explanation, or formatting.
-- Use nested keys (e.g., input.string) and square brackets for lists.
-- You can reference these relevant memories:
-{memory_texts}
+    Guidelines:
+    - Respond using EXACTLY ONE of the formats above per step.
+    - Do NOT include extra text, explanation, or formatting.
+    - Use nested keys (e.g., input.string) and square brackets for lists.
+    - You can reference these relevant memories:
+    {memory_texts}
 
-Input Summary:
-- User input: "{perception.user_input}"
-- Intent: {perception.intent}
-- Entities: {', '.join(perception.entities)}
-- Tool hint: {perception.tool_hint or 'None'}
+    Input Summary:
+    - User input: "{perception.user_input}"
+    - Intent: {perception.intent}
+    - Entities: {', '.join(perception.entities)}
+    - Tool hint: {perception.tool_hint or 'None'}
 
-✅ Examples:
-- FUNCTION_CALL: add|a=5|b=3
-- FUNCTION_CALL: strings_to_chars_to_int|input.string=INDIA
-- FUNCTION_CALL: int_list_to_exponential_sum|input.int_list=[73,78,68,73,65]
-- FINAL_ANSWER: [42]
+    ✅ Examples:
+    - FUNCTION_CALL: add|a=5|b=3
+    - FUNCTION_CALL: strings_to_chars_to_int|input.string=INDIA
+    - FUNCTION_CALL: int_list_to_exponential_sum|input.int_list=[73,78,68,73,65]
+    - FINAL_ANSWER: [42]
 
-✅ Examples:
-- User asks: "What’s the relationship between Cricket and Sachin Tendulkar"
-  - FUNCTION_CALL: search_documents|query="relationship between Cricket and Sachin Tendulkar"
-  - [receives a detailed document]
-  - FINAL_ANSWER: [Sachin Tendulkar is widely regarded as the "God of Cricket" due to his exceptional skills, longevity, and impact on the sport in India. He is the leading run-scorer in both Test and ODI cricket, and the first to score 100 centuries in international cricket. His influence extends beyond his statistics, as he is seen as a symbol of passion, perseverance, and a national icon. ]
+    ✅ Examples:
+    - User asks: "What's the relationship between Cricket and Sachin Tendulkar"
+      - FUNCTION_CALL: search_documents|query="relationship between Cricket and Sachin Tendulkar"
+      - [receives a detailed document]
+      - FINAL_ANSWER: [Sachin Tendulkar is widely regarded as the "God of Cricket" due to his exceptional skills, longevity, and impact on the sport in India. He is the leading run-scorer in both Test and ODI cricket, and the first to score 100 centuries in international cricket. His influence extends beyond his statistics, as he is seen as a symbol of passion, perseverance, and a national icon. ]
 
 
-IMPORTANT:
-- 🚫 Do NOT invent tools. Use only the tools listed below.
-- 📄 If the question may relate to factual knowledge, use the 'search_documents' tool to look for the answer.
-- 🧮 If the question is mathematical or needs calculation, use the appropriate math tool.
-- 🤖 If the previous tool output already contains factual information, DO NOT search again. Instead, summarize the relevant facts and respond with: FINAL_ANSWER: [your answer]
-- Only repeat `search_documents` if the last result was irrelevant or empty.
-- ❌ Do NOT repeat function calls with the same parameters.
-- ❌ Do NOT output unstructured responses.
-- 🧠 Think before each step. Verify intermediate results mentally before proceeding.
-- 💥 If unsure or no tool fits, skip to FINAL_ANSWER: [unknown]
-- ✅ You have only 3 attempts. Final attempt must be FINAL_ANSWER]
-"""
+    IMPORTANT:
+    - 🚫 Do NOT invent tools. Use only the tools listed below.
+    - 📄 If the question may relate to factual knowledge, use the 'search_documents' tool to look for the answer.
+    - 🧮 If the question is mathematical or needs calculation, use the appropriate math tool.
+    - 🤖 If the previous tool output already contains factual information, DO NOT search again. Instead, summarize the relevant facts and respond with: FINAL_ANSWER: [your answer]
+    - Only repeat `search_documents` if the last result was irrelevant or empty.
+    - ❌ Do NOT repeat function calls with the same parameters.
+    - ❌ Do NOT output unstructured responses.
+    - 🧠 Think before each step. Verify intermediate results mentally before proceeding.
+    - 💥 If unsure or no tool fits, skip to FINAL_ANSWER: [unknown]
+    - ✅ You have only 3 attempts. Final attempt must be FINAL_ANSWER]
+    """
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        response = model.generate_content(prompt)
         raw = response.text.strip()
         log("plan", f"LLM output: {raw}")
 
@@ -91,7 +123,7 @@ IMPORTANT:
                 return line.strip()
 
         return raw.strip()
-
+        
     except Exception as e:
         log("plan", f"⚠️ Decision generation failed: {e}")
         return "FINAL_ANSWER: [unknown]"

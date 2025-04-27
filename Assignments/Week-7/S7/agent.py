@@ -8,109 +8,180 @@ from decision import generate_plan
 from action import execute_tool
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
- # use this to connect to running server
-
+from youtube_tool import YouTubeTool, YouTubeVideoInput, YouTubeVideoOutput
 import shutil
 import sys
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, Dict, Any, List
+import uvicorn
+from dotenv import load_dotenv
 
-def log(stage: str, msg: str):
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"[{now}] [{stage}] {msg}")
+# Load environment variables
+load_dotenv()
 
-max_steps = 3
+# Initialize FastAPI app
+app = FastAPI()
 
-async def main(user_input: str):
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Initialize memory manager and YouTube tool
+memory_manager = MemoryManager()
+youtube_tool = YouTubeTool()
+
+async def execute_plan(plan: str, memory_manager: MemoryManager, url: str = None) -> dict:
+    """Execute the generated plan using available tools"""
     try:
-        print("[agent] Starting agent...")
-        print(f"[agent] Current working directory: {os.getcwd()}")
+        print(f"[execute_plan] Received plan: {plan}")
+        print(f"[execute_plan] URL: {url}")
         
-        server_params = StdioServerParameters(
-            command="python",
-            args=["example3.py"],
-            cwd="I:/TSAI/2025/EAG/Session 7/S7"
+        # Check if plan contains a function call
+        if "FUNCTION_CALL:" in plan:
+            # Extract function name and arguments
+            function_part = plan.split("FUNCTION_CALL:")[1].strip()
+            function_name = function_part.split("|")[0].strip()
+            args_str = function_part.split("|")[1].strip()
+            
+            print(f"[execute_plan] Function call: {function_name} with args: {args_str}")
+            
+            # Parse arguments
+            args = {}
+            for arg in args_str.split(","):
+                key, value = arg.split("=")
+                args[key.strip('"')] = value.strip('"')
+            
+            print(f"[execute_plan] Parsed args: {args}")
+            
+            # Execute the appropriate function
+            if function_name == "search_documents":
+                # Use YouTube tool for search
+                print(f"[execute_plan] Calling youtube_tool.search_video with query: {args['query']} and url: {url}")
+                result = await youtube_tool.search_video(args["query"], url)
+                print(f"[execute_plan] Search result: {result}")
+                return {
+                    "status": result.status,
+                    "message": result.message,
+                    "data": result.data
+                }
+            else:
+                print(f"[execute_plan] Unknown function: {function_name}")
+                return {
+                    "status": "error",
+                    "message": f"Unknown function: {function_name}"
+                }
+        else:
+            print(f"[execute_plan] No function call found in plan")
+            return {
+                "status": "success",
+                "message": plan,
+                "data": None
+            }
+    except Exception as e:
+        print(f"[execute_plan] Error: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+class AgentRequest(BaseModel):
+    user_input: str
+    url: str
+    intent: Optional[str] = "search"
+    entities: Optional[List[str]] = []
+    tool_hint: Optional[str] = None
+
+class AgentResponse(BaseModel):
+    status: str
+    message: str
+    data: Optional[dict] = None
+
+@app.post("/agent")
+async def process_request(request: AgentRequest) -> AgentResponse:
+    try:
+        print(f"[process_request] Received request: {request}")
+        
+        # Extract perception
+        perception = extract_perception(request.user_input)
+        print(f"[process_request] Extracted perception: {perception}")
+        
+        # Get relevant memories
+        memory_items = memory_manager.retrieve(request.user_input)
+        print(f"[process_request] Retrieved memories: {len(memory_items)} items")
+        
+        # Generate plan with memory items
+        plan = generate_plan(perception, memory_items)
+        print(f"[process_request] Generated plan: {plan}")
+        
+        # Execute plan with URL
+        result = await execute_plan(plan, memory_manager, request.url)
+        print(f"[process_request] Execution result: {result}")
+        
+        return AgentResponse(
+            status="success",
+            message="Request processed successfully",
+            data=result
+        )
+    except Exception as e:
+        print(f"[process_request] Error: {str(e)}")
+        return AgentResponse(
+            status="error",
+            message=str(e)
         )
 
+def run_agent():
+    """Run the agent in interactive mode"""
+    memory_manager = MemoryManager()
+    
+    print("🧑 What do you want to solve today? → ", end="")
+    while True:
         try:
-            async with stdio_client(server_params) as (read, write):
-                print("Connection established, creating session...")
-                try:
-                    async with ClientSession(read, write) as session:
-                        print("[agent] Session created, initializing...")
- 
-                        try:
-                            await session.initialize()
-                            print("[agent] MCP session initialized")
-
-                            # Your reasoning, planning, perception etc. would go here
-                            tools = await session.list_tools()
-                            print("Available tools:", [t.name for t in tools.tools])
-
-                            # Get available tools
-                            print("Requesting tool list...")
-                            tools_result = await session.list_tools()
-                            tools = tools_result.tools
-                            tool_descriptions = "\n".join(
-                                f"- {tool.name}: {getattr(tool, 'description', 'No description')}" 
-                                for tool in tools
-                            )
-
-                            log("agent", f"{len(tools)} tools loaded")
-
-                            memory = MemoryManager()
-                            session_id = f"session-{int(time.time())}"
-                            query = user_input  # Store original intent
-                            step = 0
-
-                            while step < max_steps:
-                                log("loop", f"Step {step + 1} started")
-
-                                perception = extract_perception(user_input)
-                                log("perception", f"Intent: {perception.intent}, Tool hint: {perception.tool_hint}")
-
-                                retrieved = memory.retrieve(query=user_input, top_k=3, session_filter=session_id)
-                                log("memory", f"Retrieved {len(retrieved)} relevant memories")
-
-                                plan = generate_plan(perception, retrieved, tool_descriptions=tool_descriptions)
-                                log("plan", f"Plan generated: {plan}")
-
-                                if plan.startswith("FINAL_ANSWER:"):
-                                    log("agent", f"✅ FINAL RESULT: {plan}")
-                                    break
-
-                                try:
-                                    result = await execute_tool(session, tools, plan)
-                                    log("tool", f"{result.tool_name} returned: {result.result}")
-
-                                    memory.add(MemoryItem(
-                                        text=f"Tool call: {result.tool_name} with {result.arguments}, got: {result.result}",
-                                        type="tool_output",
-                                        tool_name=result.tool_name,
-                                        user_query=user_input,
-                                        tags=[result.tool_name],
-                                        session_id=session_id
-                                    ))
-
-                                    user_input = f"Original task: {query}\nPrevious output: {result.result}\nWhat should I do next?"
-
-                                except Exception as e:
-                                    log("error", f"Tool execution failed: {e}")
-                                    break
-
-                                step += 1
-                        except Exception as e:
-                            print(f"[agent] Session initialization error: {str(e)}")
-                except Exception as e:
-                    print(f"[agent] Session creation error: {str(e)}")
+            user_input = input().strip()
+            if not user_input:
+                continue
+                
+            # Extract perception
+            perception = extract_perception(user_input)
+            
+            # Get relevant memories
+            memory_items = memory_manager.retrieve(user_input)
+            
+            # Generate plan
+            plan = generate_plan(perception, memory_items)
+            
+            # Execute plan
+            result = execute_plan(plan, memory_manager)
+            
+            # Store result in memory
+            memory_item = MemoryItem(
+                text=user_input,
+                type="interaction",
+                metadata={"result": str(result)}
+            )
+            memory_manager.add(memory_item)
+            
+            print("🧑 What do you want to solve today? → ", end="")
+            
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
         except Exception as e:
-            print(f"[agent] Connection error: {str(e)}")
-    except Exception as e:
-        print(f"[agent] Overall error: {str(e)}")
-
-    log("agent", "Agent session complete.")
+            print(f"Error: {e}")
+            print("🧑 What do you want to solve today? → ", end="")
 
 if __name__ == "__main__":
-    query = input("🧑 What do you want to solve today? → ")
-    asyncio.run(main(query))
+    # Check if running as server or interactive mode
+    if os.getenv("RUN_AS_SERVER", "false").lower() == "true":
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    else:
+        run_agent()
 
 
 # Find the ASCII values of characters in INDIA and then return sum of exponentials of those values.

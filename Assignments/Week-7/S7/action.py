@@ -2,6 +2,7 @@ from typing import Dict, Any, Union
 from pydantic import BaseModel
 from mcp import ClientSession
 import ast
+from youtube_tool import YouTubeTool, YouTubeVideoInput, YouTubeVideoOutput
 
 # Optional: import log from agent if shared, else define locally
 try:
@@ -56,11 +57,47 @@ def parse_function_call(response: str) -> tuple[str, Dict[str, Any]]:
         raise
 
 
+async def execute_youtube_tool(tool: YouTubeTool, arguments: Dict[str, Any]) -> ToolCallResult:
+    """Execute YouTube tool actions."""
+    try:
+        input_data = YouTubeVideoInput(
+            url=arguments.get("url", ""),
+            action=arguments.get("action", ""),
+            query=arguments.get("query")
+        )
+
+        if input_data.action == "process":
+            result = await tool.process_video(input_data.url)
+        elif input_data.action == "search":
+            result = await tool.search_video(input_data.query, input_data.url)
+        else:
+            raise ValueError(f"Invalid YouTube action: {input_data.action}")
+
+        return ToolCallResult(
+            tool_name="youtube_tool",
+            arguments=arguments,
+            result=result.dict(),
+            raw_response=result
+        )
+
+    except Exception as e:
+        log("tool", f"⚠️ YouTube tool execution failed: {e}")
+        raise
+
+
 async def execute_tool(session: ClientSession, tools: list[Any], response: str) -> ToolCallResult:
     """Executes a FUNCTION_CALL via MCP tool session."""
     try:
         tool_name, arguments = parse_function_call(response)
 
+        # Special handling for YouTube tool
+        if tool_name == "youtube_tool":
+            youtube_tool = next((t for t in tools if isinstance(t, YouTubeTool)), None)
+            if not youtube_tool:
+                raise ValueError("YouTube tool not found in registered tools")
+            return await execute_youtube_tool(youtube_tool, arguments)
+
+        # Handle other tools
         tool = next((t for t in tools if t.name == tool_name), None)
         if not tool:
             raise ValueError(f"Tool '{tool_name}' not found in registered tools")
