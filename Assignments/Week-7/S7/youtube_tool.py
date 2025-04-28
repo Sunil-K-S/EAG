@@ -188,6 +188,11 @@ class YouTubeTool:
             else:
                 print(f"[youtube_tool] Using existing processed video")
             
+            # Log the search query and filters
+            print(f"[youtube_tool] Search query: {query}")
+            print(f"[youtube_tool] Video ID filter: {video_id}")
+            print(f"[youtube_tool] Tag filter: ['youtube', video_id]")
+            
             # Search memory for relevant chunks
             print(f"[youtube_tool] Searching memory for query: {query}")
             results = self.memory.retrieve(
@@ -195,7 +200,9 @@ class YouTubeTool:
                 top_k=3,
                 tag_filter=["youtube", video_id]
             )
-            print(f"[youtube_tool] Retrieved {len(results)} results")
+            print(f"[youtube_tool] Retrieved {len(results)} results with the following details:")
+            for i, item in enumerate(results):
+                print(f"[youtube_tool] Result {i}: text='{item.text[:50]}...', start_seconds={item.metadata.get('start', 'N/A')}, tags={item.tags}")
             
             # Format results with timestamps and similarity scores
             formatted_results = []
@@ -214,7 +221,7 @@ class YouTubeTool:
                     formatted_results.append({
                         "timestamp": display_timestamp,
                         "start": start_seconds,
-                        "text": item.text,
+                        "content": item.text,  # Ensure content is populated
                         "score": 1.0
                     })
             

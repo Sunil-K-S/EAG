@@ -9,6 +9,7 @@ from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime
 import json
+import time
 
 def log(stage: str, msg: str):
     now = datetime.now().strftime("%H:%M:%S")
@@ -58,6 +59,11 @@ class MemoryManager:
                 with open(os.path.join(self.index_path, "embeddings.npy"), "rb") as f:
                     self.embeddings = list(np.load(f))
                 log("memory", f"Loaded index with {len(self.data)} items")
+            else:
+                log("memory", "No existing index found, starting fresh")
+                self.index = None
+                self.data = []
+                self.embeddings = []
         except Exception as e:
             log("memory", f"⚠️ Failed to load index: {e}")
             self.index = None
@@ -77,27 +83,62 @@ class MemoryManager:
             log("memory", f"Saved index with {len(self.data)} items")
         except Exception as e:
             log("memory", f"⚠️ Failed to save index: {e}")
+            raise  # Re-raise to handle at higher level
 
-    def _get_embedding(self, text: str) -> np.ndarray:
-        response = requests.post(
-            self.embedding_model_url,
-            json={"model": self.model_name, "prompt": text}
-        )
-        response.raise_for_status()
-        return np.array(response.json()["embedding"], dtype=np.float32)
+    def _get_embedding(self, text: str, max_retries: int = 3) -> np.ndarray:
+        """Get embedding with retries and error handling."""
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    self.embedding_model_url,
+                    json={"model": self.model_name, "prompt": text},
+                    timeout=10  # Add timeout
+                )
+                response.raise_for_status()
+                embedding = np.array(response.json()["embedding"], dtype=np.float32)
+                
+                # Validate embedding
+                if embedding.size == 0:
+                    raise ValueError("Empty embedding received")
+                if not np.all(np.isfinite(embedding)):
+                    raise ValueError("Invalid values in embedding")
+                    
+                return embedding
+            except Exception as e:
+                last_error = e
+                log("memory", f"⚠️ Embedding attempt {attempt + 1} failed: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(1 * (attempt + 1))  # Exponential backoff
+                    continue
+        raise last_error
 
     def add(self, item: MemoryItem):
-        emb = self._get_embedding(item.text)
-        self.embeddings.append(emb)
-        self.data.append(item)
+        """Add item to memory with validation and error handling."""
+        try:
+            # Validate item
+            if not item.text.strip():
+                raise ValueError("Empty text in memory item")
+                
+            # Get embedding
+            emb = self._get_embedding(item.text)
+            self.embeddings.append(emb)
+            self.data.append(item)
 
-        # Initialize or add to index
-        if self.index is None:
-            self.index = faiss.IndexFlatL2(len(emb))
-        self.index.add(np.stack([emb]))
-        
-        # Save after adding
-        self._save_index()
+            # Log the item being added
+            log("memory", f"Adding item with text: '{item.text[:50]}...', tags: {item.tags}")
+
+            # Initialize or add to index
+            if self.index is None:
+                self.index = faiss.IndexFlatL2(len(emb))
+            self.index.add(np.stack([emb]))
+            
+            # Save after adding
+            self._save_index()
+            
+        except Exception as e:
+            log("memory", f"❌ Failed to add item: {e}")
+            raise
 
     def retrieve(
         self,
@@ -107,51 +148,105 @@ class MemoryManager:
         tag_filter: Optional[List[str]] = None,
         session_filter: Optional[str] = None,
         video_id: Optional[str] = None,
-        timestamp_range: Optional[tuple[str, str]] = None
+        timestamp_range: Optional[tuple[str, str]] = None,
+        min_score: float = 0.0
     ) -> List[MemoryItem]:
+        """Retrieve items from memory with improved filtering and scoring."""
         if not self.index or len(self.data) == 0:
+            log("memory", "No index or data available for retrieval")
             return []
 
-        query_vec = self._get_embedding(query).reshape(1, -1)
-        D, I = self.index.search(query_vec, top_k * 2)  # Overfetch to allow filtering
+        try:
+            # Get query embedding
+            query_vec = self._get_embedding(query).reshape(1, -1)
+            
+            # Search with larger k to allow for filtering
+            k = min(top_k * 4, len(self.data))  # Get 4x results for filtering
+            D, I = self.index.search(query_vec, k)
+            
+            # Convert distances to scores (1 / (1 + distance))
+            scores = 1 / (1 + D[0])
 
-        results = []
-        for idx in I[0]:
-            if idx >= len(self.data):
-                continue
-            item = self.data[idx]
+            log("memory", f"Search results indices: {I[0]}")
+            log("memory", f"Search scores: {scores}")
 
-            # Filter by type
-            if type_filter and item.type != type_filter:
-                continue
-
-            # Filter by tags
-            if tag_filter and not any(tag in item.tags for tag in tag_filter):
-                continue
-
-            # Filter by session
-            if session_filter and item.session_id != session_filter:
-                continue
-
-            # Filter by video ID
-            if video_id and (not item.youtube_metadata or item.youtube_metadata.video_id != video_id):
-                continue
-
-            # Filter by timestamp range
-            if timestamp_range and item.youtube_metadata:
-                start_time, end_time = timestamp_range
-                if not (start_time <= item.youtube_metadata.timestamp <= end_time):
+            results = []
+            for idx, score in zip(I[0], scores):
+                if idx >= len(self.data) or score < min_score:
+                    continue
+                    
+                item = self.data[idx]
+                
+                # Apply filters
+                if not self._passes_filters(
+                    item, 
+                    type_filter, 
+                    tag_filter, 
+                    session_filter, 
+                    video_id, 
+                    timestamp_range
+                ):
                     continue
 
-            results.append(item)
-            if len(results) >= top_k:
-                break
+                # Add score to metadata
+                item_with_score = item.copy()
+                if item_with_score.metadata is None:
+                    item_with_score.metadata = {}
+                item_with_score.metadata['score'] = float(score)
+                
+                results.append(item_with_score)
+                if len(results) >= top_k:
+                    break
 
-        return results
+            log("memory", f"Final retrieved results count: {len(results)}")
+            return results
+
+        except Exception as e:
+            log("memory", f"❌ Error during retrieval: {e}")
+            return []
+
+    def _passes_filters(
+        self,
+        item: MemoryItem,
+        type_filter: Optional[str],
+        tag_filter: Optional[List[str]],
+        session_filter: Optional[str],
+        video_id: Optional[str],
+        timestamp_range: Optional[tuple[str, str]]
+    ) -> bool:
+        """Check if item passes all filters."""
+        # Type filter
+        if type_filter and item.type != type_filter:
+            return False
+
+        # Tag filter
+        if tag_filter and not any(tag in item.tags for tag in tag_filter):
+            return False
+
+        # Session filter
+        if session_filter and item.session_id != session_filter:
+            return False
+
+        # Video ID filter
+        if video_id and (not item.youtube_metadata or item.youtube_metadata.video_id != video_id):
+            return False
+
+        # Timestamp range filter
+        if timestamp_range and item.youtube_metadata:
+            start_time, end_time = timestamp_range
+            if not (start_time <= item.youtube_metadata.timestamp <= end_time):
+                return False
+
+        return True
 
     def bulk_add(self, items: List[MemoryItem]):
+        """Add multiple items efficiently."""
         for item in items:
-            self.add(item)
+            try:
+                self.add(item)
+            except Exception as e:
+                log("memory", f"❌ Failed to add item in bulk: {e}")
+                continue
 
     def get_video_chunks(self, video_id: str) -> List[MemoryItem]:
         """Get all chunks for a specific video."""
@@ -161,17 +256,29 @@ class MemoryManager:
                 and item.youtube_metadata.video_id == video_id]
 
     def delete_video_chunks(self, video_id: str):
-        """Delete all chunks for a specific video."""
-        to_keep = []
-        for i, item in enumerate(self.data):
-            if not (item.type == "youtube_chunk" 
-                   and item.youtube_metadata 
-                   and item.youtube_metadata.video_id == video_id):
-                to_keep.append(i)
-        
-        if to_keep:
-            self.data = [self.data[i] for i in to_keep]
-            self.embeddings = [self.embeddings[i] for i in to_keep]
-            self.index = faiss.IndexFlatL2(len(self.embeddings[0]))
-            self.index.add(np.stack(self.embeddings))
-            self._save_index()
+        """Delete all chunks for a specific video and rebuild index."""
+        try:
+            to_keep = []
+            for i, item in enumerate(self.data):
+                if not (item.type == "youtube_chunk" 
+                       and item.youtube_metadata 
+                       and item.youtube_metadata.video_id == video_id):
+                    to_keep.append(i)
+            
+            if to_keep:
+                self.data = [self.data[i] for i in to_keep]
+                self.embeddings = [self.embeddings[i] for i in to_keep]
+                
+                # Rebuild index
+                if self.embeddings:
+                    self.index = faiss.IndexFlatL2(len(self.embeddings[0]))
+                    self.index.add(np.stack(self.embeddings))
+                else:
+                    self.index = None
+                    
+                self._save_index()
+                log("memory", f"Deleted chunks for video {video_id} and rebuilt index")
+            
+        except Exception as e:
+            log("memory", f"❌ Failed to delete video chunks: {e}")
+            raise

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>YouTube RAG Assistant</title>
+    <style>
+      body {
+        width: 420px;
+        padding: 15px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        margin: 0;
+        color: #333;
+      }
+      h2 {
+        margin-top: 0;
+        color: #c00;
+        font-size: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+      }
+      .search-container {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 15px;
+      }
+      .search-box {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .search-button {
+        padding: 10px 15px;
+        background-color: #c00;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+      .search-button:hover {
+        background-color: #a00;
+      }
+      .search-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+      .results {
+        margin-top: 15px;
+        max-height: 350px;
+        overflow-y: auto;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+      }
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .results-header h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .query-time {
+        font-size: 12px;
+        color: #666;
+        margin: 0;
+      }
+      .status {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        display: none;
+      }
+      .status.success {
+        background-color: #e6f4ea;
+        color: #137333;
+        display: block;
+      }
+      .status.error {
+        background-color: #fce8e6;
+        color: #c5221f;
+        display: block;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
+      .no-results {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 20px 0;
+      }
+      .error {
+        color: #c5221f;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>YouTube RAG Assistant</h2>
+    <div class="search-container">
+      <input type="text" id="searchQuery" class="search-box" placeholder="Ask about this video...">
+      <button id="searchButton" class="search-button">Search</button>
+    </div>
+    <div id="status" class="status"></div>
+    <div id="results" class="results"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>
