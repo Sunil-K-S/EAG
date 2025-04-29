@@ -1,41 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Get DOM elements with error handling
-    const searchButton = document.getElementById('searchButton');
-    const searchQuery = document.getElementById('searchQuery');
+    const submitButton = document.getElementById('submitButton');
+    const topicInput = document.getElementById('topicInput');
+    const queryInput = document.getElementById('queryInput');
     const resultsDiv = document.getElementById('results');
     const statusDiv = document.getElementById('status');
 
-    // Create loading element if it doesn't exist
-    let loadingDiv = document.getElementById('loading');
-    if (!loadingDiv) {
-        loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading';
-        loadingDiv.className = 'loading';
-        loadingDiv.innerHTML = '<div class="spinner"></div><p>Processing video and searching...</p>';
-        loadingDiv.style.display = 'none';
-        document.body.appendChild(loadingDiv);
-    }
+    // Create loading element
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading';
+    loadingDiv.className = 'loading';
+    loadingDiv.innerHTML = '<div class="spinner"></div><p>Searching and processing videos...</p>';
+    loadingDiv.style.display = 'none';
+    document.body.appendChild(loadingDiv);
 
-    // Validate required DOM elements
-    if (!searchButton || !searchQuery || !resultsDiv || !statusDiv) {
-        console.error('Required DOM elements not found');
-        if (statusDiv) {
-            statusDiv.textContent = 'Error: Extension failed to initialize';
-            statusDiv.className = 'status error';
-        }
-        return;
-    }
-
-    // Add some CSS for the loading spinner
+    // Add CSS for spinner
     const style = document.createElement('style');
     style.textContent = `
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #4285f4;
+            border-top: 4px solid #c00;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -46,86 +29,121 @@ document.addEventListener('DOMContentLoaded', function() {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .result-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-        }
-        .result-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .result-number {
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        .timestamp-button {
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 3px 8px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .timestamp-button:hover {
-            background-color: #3367d6;
-        }
-        .score {
-            font-size: 0.8em;
-            color: #666;
-        }
-        .result-content {
-            margin-top: 5px;
-            line-height: 1.4;
-        }
     `;
     document.head.appendChild(style);
 
-    // Get the current tab's URL
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        const currentTab = tabs[0];
-        if (!currentTab?.url?.includes('youtube.com/watch')) {
-            resultsDiv.innerHTML = '<p class="error">Please open a YouTube video first.</p>';
-            searchButton.disabled = true;
-            return;
-        }
-    });
-
-    searchButton.addEventListener('click', async function() {
-        const query = searchQuery.value.trim();
-        if (!query) {
-            statusDiv.textContent = 'Please enter a search query.';
-            statusDiv.className = 'status error';
-            return;
-        }
-
-        // Get current tab URL
-        const tabs = await chrome.tabs.query({active: true, currentWindow: true});
-        const currentTab = tabs[0];
-        const videoUrl = currentTab?.url;
-
-        if (!videoUrl?.includes('youtube.com/watch')) {
-            statusDiv.textContent = 'Please open a YouTube video first.';
-            statusDiv.className = 'status error';
-            return;
-        }
-
-        // Show loading state
-        loadingDiv.style.display = 'block';
-        resultsDiv.style.display = 'none';
-        statusDiv.style.display = 'none';
-        searchButton.disabled = true;
-
+    async function searchYouTube(topic) {
         try {
-            console.log('Sending request to backend:', {
-                user_input: query,
-                url: videoUrl
+            // First, get the cookies and headers
+            const response = await fetch('https://www.youtube.com', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1'
+                }
             });
+
+            // Now perform the search with the same headers
+            const searchResponse = await fetch(`https://www.youtube.com/results?search_query=${encodeURIComponent(topic)}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Referer': 'https://www.youtube.com/'
+                }
+            });
+
+            if (!searchResponse.ok) {
+                throw new Error(`HTTP error! status: ${searchResponse.status}`);
+            }
+
+            const html = await searchResponse.text();
             
-            // Make API request
+            // Parse HTML to extract video links
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Try to find video links in the initial data
+            const initialDataMatch = html.match(/var ytInitialData = ({.*?});/);
+            if (initialDataMatch) {
+                try {
+                    const initialData = JSON.parse(initialDataMatch[1]);
+                    const videoLinks = extractVideoLinksFromInitialData(initialData);
+                    if (videoLinks.length > 0) {
+                        return videoLinks.slice(0, 3);
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse initial data:', e);
+                }
+            }
+
+            // Fallback to DOM parsing if initial data parsing fails
+            const videoLinks = Array.from(doc.querySelectorAll('a[href*="/watch?v="]'))
+                .map(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href.includes('/watch?v=')) {
+                        const videoId = href.split('v=')[1].split('&')[0];
+                        return `https://www.youtube.com/watch?v=${videoId}`;
+                    }
+                    return null;
+                })
+                .filter(href => href !== null)
+                .filter((value, index, self) => self.indexOf(value) === index)
+                .slice(0, 3);
+
+            if (videoLinks.length === 0) {
+                throw new Error('No videos found for the given topic');
+            }
+
+            return videoLinks;
+        } catch (error) {
+            console.error('Error searching YouTube:', error);
+            throw new Error('Failed to search YouTube: ' + error.message);
+        }
+    }
+
+    function extractVideoLinksFromInitialData(data) {
+        try {
+            const videoLinks = [];
+            
+            // Helper function to traverse the data structure
+            function traverse(obj) {
+                if (!obj) return;
+                
+                // Check if this is a video renderer
+                if (obj.videoRenderer && obj.videoRenderer.videoId) {
+                    videoLinks.push(`https://www.youtube.com/watch?v=${obj.videoRenderer.videoId}`);
+                    return;
+                }
+                
+                // Recursively traverse arrays and objects
+                if (Array.isArray(obj)) {
+                    obj.forEach(item => traverse(item));
+                } else if (typeof obj === 'object') {
+                    Object.values(obj).forEach(value => traverse(value));
+                }
+            }
+            
+            // Start traversal from the root
+            traverse(data);
+            
+            return videoLinks;
+        } catch (e) {
+            console.error('Error extracting video links from initial data:', e);
+            return [];
+        }
+    }
+
+    async function queryVideo(videoUrl, query) {
+        try {
             const response = await fetch('http://localhost:8000/agent', {
                 method: 'POST',
                 headers: {
@@ -142,129 +160,182 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
-            console.log('Server response:', data);
+            return data;
+        } catch (error) {
+            console.error('Error querying video:', error);
+            throw new Error(`Failed to query video: ${error.message}`);
+        }
+    }
 
-            // Parse the result
-            let results = [];
-            if (data.result) {
-                try {
-                    // Try to parse the result as JSON if it's a string
-                    let resultObj;
-                    if (typeof data.result === 'string') {
-                        try {
-                            resultObj = JSON.parse(data.result);
-                        } catch (e) {
-                            // If it's not valid JSON, check if it contains JSON
-                            const jsonMatch = data.result.match(/\{.*\}/s);
-                            if (jsonMatch) {
-                                try {
-                                    resultObj = JSON.parse(jsonMatch[0]);
-                                } catch (e2) {
-                                    console.error('Failed to extract JSON from string:', e2);
-                                    resultObj = { message: data.result };
-                                }
-                            } else {
-                                resultObj = { message: data.result };
-                            }
-                        }
-                    } else {
-                        resultObj = data.result;
-                    }
-                    
-                    // Check for error status
-                    if (resultObj.status === 'error') {
-                        throw new Error(resultObj.message || 'Unknown error occurred');
-                    }
+    function convertTimestampToSeconds(timestamp) {
+        const parts = timestamp.split(':');
+        if (parts.length === 2) {
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        } else if (parts.length === 3) {
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+        }
+        return 0;
+    }
 
-                    // Extract results based on response format
-                    if (resultObj.results && Array.isArray(resultObj.results)) {
-                        results = resultObj.results;
-                    } else if (resultObj.data && resultObj.data.results) {
-                        results = resultObj.data.results;
-                    }
+    function createTimestampLink(videoUrl, timestamp) {
+        const seconds = convertTimestampToSeconds(timestamp);
+        const url = new URL(videoUrl);
+        url.searchParams.set('t', seconds);
+        return url.toString();
+    }
 
-                    // Format and display results
-                    if (results.length > 0) {
-                        const resultsHtml = results.map((result, index) => {
-                            const timestamp = result.timestamp || '00:00';
-                            const score = result.score ? `(Score: ${(result.score * 100).toFixed(1)}%)` : '';
-                            const content = result.content || result.text || 'No content available';
-                            
-                            return `
-                                <div class="result-item">
-                                    <div class="result-header">
-                                        <span class="result-number">${index + 1}.</span>
-                                        <button class="timestamp-button" data-start="${result.start || 0}">
-                                            ${timestamp}
-                                        </button>
-                                        <span class="score">${score}</span>
-                                    </div>
-                                    <div class="result-content">${content}</div>
-                                </div>
-                            `;
-                        }).join('');
+    function openVideoAtTimestamp(videoUrl, timestamp) {
+        const url = createTimestampLink(videoUrl, timestamp);
+        chrome.windows.create({
+            url: url,
+            type: 'normal',
+            width: 1280,
+            height: 720,
+            left: Math.round((screen.width - 1280) / 2),
+            top: Math.round((screen.height - 720) / 2)
+        });
+    }
 
-                        resultsDiv.innerHTML = `
-                            <div class="results-header">
-                                <h3>Found ${results.length} relevant segments</h3>
-                                <p class="query-time">${resultObj.query_time ? `(Search took ${resultObj.query_time.toFixed(2)}s)` : ''}</p>
-                            </div>
-                            <div class="results-list">
-                                ${resultsHtml}
-                            </div>
-                        `;
+    function formatResults(videoUrl, results) {
+        if (!results || !Array.isArray(results)) {
+            return 'No results found';
+        }
 
-                        // Add click handlers for timestamp buttons
-                        document.querySelectorAll('.timestamp-button').forEach(button => {
-                            button.addEventListener('click', function() {
-                                const startTime = this.dataset.start;
-                                console.log('Seeking to time:', startTime);
-                                chrome.tabs.sendMessage(currentTab.id, {
-                                    action: 'seekTo',
-                                    time: startTime
-                                }, function(response) {
-                                    console.log('Response from content script:', response);
-                                });
-                            });
-                        });
+        return results.map(result => {
+            const timestamp = result.timestamp || '00:00';
+            const content = result.content || result.text || 'No content available';
+            
+            return `
+                <div class="result-item">
+                    <span class="timestamp-link" data-url="${videoUrl}" data-timestamp="${timestamp}">${timestamp}</span>
+                    <div class="content">${content}</div>
+                </div>
+            `;
+        }).join('');
+    }
 
-                        statusDiv.textContent = `Found ${results.length} relevant segments`;
-                        statusDiv.className = 'status success';
-                    } else {
-                        resultsDiv.innerHTML = '<p class="no-results">No results found for your query.</p>';
-                        statusDiv.textContent = 'No results found';
-                        statusDiv.className = 'status error';
-                    }
-                } catch (parseError) {
-                    console.error('Error parsing results:', parseError);
-                    // Display raw result if parsing failed
-                    resultsDiv.innerHTML = `<p>Raw result: ${data.result}</p>`;
-                    statusDiv.textContent = 'Error parsing search results';
-                    statusDiv.className = 'status error';
-                }
-            } else {
-                resultsDiv.innerHTML = '<p class="no-results">No results found.</p>';
-                statusDiv.textContent = 'No results found';
-                statusDiv.className = 'status error';
+    async function getVideoTitle(videoUrl) {
+        try {
+            const response = await fetch(videoUrl);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const title = doc.querySelector('title')?.textContent || videoUrl;
+            return title.replace(' - YouTube', '');
+        } catch (error) {
+            console.error('Error getting video title:', error);
+            return videoUrl;
+        }
+    }
+
+    submitButton.addEventListener('click', async function() {
+        const topic = topicInput.value.trim();
+        const query = queryInput.value.trim();
+
+        if (!topic || !query) {
+            statusDiv.textContent = 'Please enter both a topic and a query.';
+            statusDiv.className = 'status error';
+            return;
+        }
+
+        // Show loading state
+        loadingDiv.style.display = 'block';
+        resultsDiv.style.display = 'none';
+        statusDiv.style.display = 'none';
+        submitButton.disabled = true;
+
+        try {
+            // Search YouTube for videos
+            statusDiv.textContent = 'Searching YouTube...';
+            statusDiv.className = 'status';
+            statusDiv.style.display = 'block';
+
+            const videoUrls = await searchYouTube(topic);
+            if (videoUrls.length === 0) {
+                throw new Error('No videos found for the given topic');
             }
 
+            // Clear previous results
+            resultsDiv.innerHTML = '';
+
+            // Process each video
+            for (const videoUrl of videoUrls) {
+                try {
+                    // Get video title
+                    const videoTitle = await getVideoTitle(videoUrl);
+                    
+                    // Create video card
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.innerHTML = `
+                        <div class="video-title">${videoTitle}</div>
+                        <div class="video-link">${videoUrl}</div>
+                        <div class="video-result">Processing...</div>
+                    `;
+                    resultsDiv.appendChild(videoCard);
+
+                    // Query the video
+                    const result = await queryVideo(videoUrl, query);
+                    
+                    // Update the video card with results
+                    const resultDiv = videoCard.querySelector('.video-result');
+                    if (result.result) {
+                        try {
+                            const resultObj = typeof result.result === 'string' ? 
+                                JSON.parse(result.result) : result.result;
+                            
+                            if (resultObj.results && Array.isArray(resultObj.results)) {
+                                resultDiv.innerHTML = formatResults(videoUrl, resultObj.results);
+                            } else {
+                                resultDiv.textContent = resultObj.message || 'No results found';
+                            }
+                        } catch (e) {
+                            resultDiv.textContent = result.result;
+                        }
+                    } else {
+                        resultDiv.textContent = 'No results found';
+                    }
+                } catch (error) {
+                    console.error(`Error processing video ${videoUrl}:`, error);
+                    const videoCard = resultsDiv.lastElementChild;
+                    if (videoCard) {
+                        const resultDiv = videoCard.querySelector('.video-result');
+                        resultDiv.textContent = `Error: ${error.message}`;
+                        resultDiv.className = 'video-result error';
+                    }
+                }
+            }
+
+            statusDiv.textContent = 'Search completed';
+            statusDiv.className = 'status success';
+
+            // Add event listener for timestamp clicks after results are loaded
+            document.querySelectorAll('.timestamp-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const videoUrl = this.getAttribute('data-url');
+                    const timestamp = this.getAttribute('data-timestamp');
+                    openVideoAtTimestamp(videoUrl, timestamp);
+                });
+            });
         } catch (error) {
             console.error('Error:', error);
             resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
             statusDiv.textContent = `Error: ${error.message}`;
             statusDiv.className = 'status error';
         } finally {
-            // Hide loading state
             loadingDiv.style.display = 'none';
             resultsDiv.style.display = 'block';
-            searchButton.disabled = false;
+            submitButton.disabled = false;
         }
     });
 
     // Add keyboard support
-    searchQuery.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            searchButton.click();
-        }
+    [topicInput, queryInput].forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitButton.click();
+            }
+        });
     });
 });

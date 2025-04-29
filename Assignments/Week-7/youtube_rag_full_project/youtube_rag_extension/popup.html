@@ -18,19 +18,19 @@
         padding-bottom: 8px;
         margin-bottom: 15px;
       }
-      .search-container {
+      .input-container {
         display: flex;
-        gap: 5px;
+        flex-direction: column;
+        gap: 10px;
         margin-bottom: 15px;
       }
-      .search-box {
-        flex: 1;
+      .input-box {
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
         font-size: 14px;
       }
-      .search-button {
+      .submit-button {
         padding: 10px 15px;
         background-color: #c00;
         color: white;
@@ -40,10 +40,10 @@
         font-weight: bold;
         transition: background-color 0.2s;
       }
-      .search-button:hover {
+      .submit-button:hover {
         background-color: #a00;
       }
-      .search-button:disabled {
+      .submit-button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
       }
@@ -54,20 +54,30 @@
         border-top: 1px solid #eee;
         padding-top: 10px;
       }
-      .results-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      .video-card {
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 10px;
         margin-bottom: 10px;
       }
-      .results-header h3 {
-        margin: 0;
-        font-size: 16px;
+      .video-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #c00;
       }
-      .query-time {
-        font-size: 12px;
+      .video-link {
         color: #666;
-        margin: 0;
+        font-size: 12px;
+        margin-bottom: 5px;
+        word-break: break-all;
+      }
+      .video-result {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 4px;
+        max-height: 300px;
+        overflow-y: auto;
       }
       .status {
         margin: 10px 0;
@@ -100,13 +110,39 @@
         color: #c5221f;
         font-weight: bold;
       }
+      .result-item {
+        margin-bottom: 10px;
+        padding: 8px;
+        background-color: #f8f8f8;
+        border-radius: 4px;
+      }
+      .timestamp-link {
+        display: inline-block;
+        color: #c00;
+        font-weight: bold;
+        text-decoration: none;
+        margin-right: 10px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background-color: rgba(204, 0, 0, 0.1);
+        transition: background-color 0.2s;
+      }
+      .timestamp-link:hover {
+        background-color: rgba(204, 0, 0, 0.2);
+        text-decoration: underline;
+      }
+      .content {
+        display: inline;
+        color: #333;
+      }
     </style>
   </head>
   <body>
     <h2>YouTube RAG Assistant</h2>
-    <div class="search-container">
-      <input type="text" id="searchQuery" class="search-box" placeholder="Ask about this video...">
-      <button id="searchButton" class="search-button">Search</button>
+    <div class="input-container">
+      <input type="text" id="topicInput" class="input-box" placeholder="Enter topic to search on YouTube...">
+      <input type="text" id="queryInput" class="input-box" placeholder="Enter your question about the topic...">
+      <button id="submitButton" class="submit-button">Search & Query</button>
     </div>
     <div id="status" class="status"></div>
     <div id="results" class="results"></div>

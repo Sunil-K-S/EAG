@@ -2,13 +2,13 @@
   "manifest_version": 3,
   "name": "YouTube RAG Assistant",
   "version": "1.0",
-  "description": "Search YouTube videos using RAG technology and semantic search",
+  "description": "Search across multiple YouTube videos using RAG technology",
   "permissions": [
     "activeTab",
-    "tabs",
     "scripting",
     "storage",
-    "notifications"
+    "notifications",
+    "windows"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
@@ -18,9 +18,7 @@
     {
       "matches": ["https://www.youtube.com/*"],
       "js": ["content.js"],
-      "run_at": "document_start",
-      "all_frames": true,
-      "match_about_blank": true
+      "run_at": "document_start"
     }
   ],
   "action": {
