@@ -43,128 +43,110 @@ class DecisionLayer:
            - Check tool output before making next decision
         """
 
-    def make_decision(self, perception: Perception, memories: List[MemoryItem], tool_descriptions: str = None) -> str:
-        """Generate a plan based on perception and memories."""
+    def make_decision(self, perception: Perception, memories: List[MemoryItem], tool_descriptions: str) -> str:
+        """Make a decision based on the perception and memories."""
         try:
-            # Check if this is a YouTube video request
-            if perception.url and "youtube.com" in perception.url:
-                # Extract video ID
-                video_id = perception.url.split("v=")[1].split("&")[0]
-                
-                # Check if video is already processed
-                video_processed = any(
-                    item.type == "youtube_chunk" and 
-                    any(tag == video_id for tag in item.tags)
-                    for item in memories
-                )
-                
-                if not video_processed:
-                    # Need to process the video first
-                    log("decision", "Video not processed, will process first")
-                    return (
-                        f"FUNCTION_CALL: process_video_tool|"
-                        f"input_data={{"
-                        f"'input_data': {{"
-                        f"'url': '{perception.url}',"
-                        f"'action': 'process'"
-                        f"}}}}"
-                    )
-                else:
-                    # Video is processed, can search directly
-                    log("decision", "Video already processed, searching directly")
-                    return (
-                        f"FUNCTION_CALL: search_video_tool|"
-                        f"input_data={{"
-                        f"'input_data': {{"
-                        f"'url': '{perception.url}',"
-                        f"'query': '{perception.user_input}',"
-                        f"'action': 'search'"
-                        f"}}}}"
-                    )
+            # Prepare context for LLM
+            context = {
+                "user_input": perception.user_input,
+                "url": perception.url,
+                "tool_hint": perception.tool_hint,
+                "available_tools": tool_descriptions,
+                "memories": [memory.text for memory in memories]
+            }
             
-            # For non-YouTube requests, use standard planning
-            return self.generate_plan(perception, memories, tool_descriptions)
+            # Generate prompt
+            prompt = self.prepare_prompt(context)
+            
+            # Get LLM response
+            response = self.model.generate_content(prompt)
+            
+            # Validate and parse the plan
+            plan = self.validate_plan(response.text.strip())
+            
+            # If plan is invalid, generate a default plan
+            if not plan:
+                if perception.tool_hint == "search_video_tool":
+                    # For search requests, directly use search_video_tool
+                    plan = f"FUNCTION_CALL:search_video_tool|input_data={{'input_data': {{'url': '{perception.url}', 'query': '{perception.user_input}', 'action': 'search'}}}}"
+                else:
+                    # For other requests, check if video needs processing
+                    if perception.url and "youtube.com" in perception.url:
+                        video_id = perception.url.split("v=")[1].split("&")[0]
+                        if not any(f"youtube_chunk_{video_id}" in memory.text for memory in memories):
+                            plan = f"FUNCTION_CALL:process_video_tool|input_data={{'input_data': {{'url': '{perception.url}', 'action': 'process'}}}}"
+                        else:
+                            plan = f"FUNCTION_CALL:search_video_tool|input_data={{'input_data': {{'url': '{perception.url}', 'query': '{perception.user_input}', 'action': 'search'}}}}"
+                    else:
+                        plan = f"FUNCTION_CALL:search_documents|input_data={{'input_data': {{'query': '{perception.user_input}'}}}}"
+            
+            return plan
             
         except Exception as e:
             log("decision", f"Error in decision making: {str(e)}")
-            return f"FINAL_ANSWER: Error in decision making: {str(e)}"
+            # Return a default plan in case of error
+            if perception.tool_hint == "search_video_tool":
+                return f"FUNCTION_CALL:search_video_tool|input_data={{'input_data': {{'url': '{perception.url}', 'query': '{perception.user_input}', 'action': 'search'}}}}"
+            return f"FUNCTION_CALL:search_documents|input_data={{'input_data': {{'query': '{perception.user_input}'}}}}"
 
-    def prepare_prompt(self, perception: Perception, memories: List[MemoryItem], tool_descriptions: str) -> str:
-        """Prepare the current prompt with history and next step guidance."""
-        # Format history with step numbers and results
-        history_text = "\n".join(
-            f"Step {i+1}: {item.get('function', 'Unknown function')} - {item.get('message', 'No message available')}"
-            for i, item in enumerate(self.history)
-        )
-        
-        # Add next step guidance based on history
-        next_step_guidance = "\nWhat should I do next?" if self.history else "\nWhat should I do first?"
-        
-        # Format memory items
-        memory_texts = "\n".join(f"- {m.text}" for m in memories) or "None"
-        
-        # For YouTube URLs, check if video is already processed
-        video_status = ""
-        if perception.url and "youtube.com" in perception.url:
-            video_id = perception.url.split("v=")[1].split("&")[0]
-            processed = any(
-                item.type == "youtube_chunk" and 
-                any(tag == video_id for tag in item.tags)
-                for item in memories
-            )
-            video_status = f"""
-Video Processing Status:
-- Video ID: {video_id}
-- Status: {'Already processed' if processed else 'Needs processing'}
-"""
+    def prepare_prompt(self, context: dict) -> str:
+        """Prepare the prompt for the LLM."""
+        return f"""You are an AI assistant that helps users find information. Based on the following context, generate a plan to help the user.
 
-        # Generate tool rules from available tools
-        tool_rules = []
-        for tool_desc in tool_descriptions.split('\n\n'):
-            if not tool_desc.strip():
-                continue
-            tool_name = tool_desc.split(':')[0].strip('- ')
-            tool_rules.append(f"- {tool_desc}")
+Context:
+- User Input: {context['user_input']}
+- URL: {context['url']}
+- Tool Hint: {context['tool_hint']}
+- Available Tools:
+{context['available_tools']}
+- Recent Memories:
+{chr(10).join(context['memories'])}
 
-        return f"""
-        You are a reasoning-driven AI agent with access to tools. Your job is to solve the user's request step-by-step by reasoning through the problem, selecting a tool if needed, and continuing until the FINAL_ANSWER is produced.
+Rules:
+1. If the user is searching within a YouTube video:
+   - First check if the video has been processed (look for 'youtube_chunk_' in memories)
+   - If not processed, use process_video_tool
+   - If processed, use search_video_tool
+2. For search_video_tool, include both URL and query
+3. For process_video_tool, only include URL
+4. Format must be: FUNCTION_CALL:tool_name|input_data={{'input_data': {{...}}}}
 
-        Available Tools and Their Usage:
-        {tool_descriptions}
+Generate a plan following these rules."""
 
-        Tool Rules:
-        {self.tool_rules}
-
-        History of completed steps:
-        {history_text}
-
-        Relevant memories:
-        {memory_texts}
-
-        Current Context:
-        - User input: "{perception.user_input}"
-        - URL: {perception.url or 'None'}
-        - Tool hint: {perception.tool_hint or 'None'}
-        {video_status}
-
-        IMPORTANT OUTPUT FORMAT RULES:
-        1. You must respond with EXACTLY ONE line containing either:
-           - FUNCTION_CALL: tool_name|input_data={'input_data': {'param1': 'value1', 'param2': 'value2'}}
-           - FINAL_ANSWER: [your answer]
-        2. DO NOT include any explanations, reasoning, or additional text
-        3. DO NOT use multiple lines
-        4. DO NOT include any formatting or markdown
-        5. DO NOT include any examples or suggestions
-
-        Guidelines:
-        - Use only the tools listed above
-        - Follow the tool descriptions for proper usage
-        - If the previous tool output already contains factual information, DO NOT search again
-        - DO NOT repeat function calls with the same parameters
-        - If unsure or no tool fits, respond with: FINAL_ANSWER: [unknown]
-        - You have only 3 attempts. Final attempt must be FINAL_ANSWER
-        {next_step_guidance}
-        """
+    def validate_plan(self, plan: str) -> str:
+        """Validate the generated plan."""
+        try:
+            # Check if plan starts with FUNCTION_CALL:
+            if not plan.startswith("FUNCTION_CALL:"):
+                return None
+                
+            # Split into tool and input_data
+            parts = plan.split("|", 1)
+            if len(parts) != 2:
+                return None
+                
+            tool_name = parts[0].replace("FUNCTION_CALL:", "").strip()
+            input_data = parts[1].strip()
+            
+            # Validate tool name
+            if tool_name not in ["process_video_tool", "search_video_tool", "search_documents"]:
+                return None
+                
+            # Validate input_data format
+            if not input_data.startswith("input_data="):
+                return None
+                
+            # Try to parse the input_data
+            try:
+                eval(input_data.replace("input_data=", ""))
+            except:
+                return None
+                
+            return plan
+            
+        except Exception as e:
+            log("decision", f"Error validating plan: {str(e)}")
+            return None
 
     def generate_plan(
         self,

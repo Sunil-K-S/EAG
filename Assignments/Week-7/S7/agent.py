@@ -155,6 +155,28 @@ async def process_request(request: Request):
                 result = await execute_plan(plan, memory_manager, request.url, request_context)
                 request_context.log_stage_time("execution")
                 
+                # If the result is from process_video_tool and was successful, follow up with search
+                if (isinstance(result, str) and 
+                    "Processed" in result and 
+                    "chunks" in result and 
+                    request.user_input and 
+                    request.url):
+                    log("agent", "Video processed successfully, following up with search...", request_context)
+                    # Create a new perception for search
+                    search_perception = Perception(
+                        user_input=request.user_input,
+                        url=request.url,
+                        tool_hint="search_video_tool"
+                    )
+                    # Generate search plan
+                    search_plan = decision_layer.make_decision(
+                        search_perception,
+                        memories,
+                        tool_descriptions
+                    )
+                    # Execute search plan
+                    result = await execute_plan(search_plan, memory_manager, request.url, request_context)
+                
                 # Calculate total time
                 total_time = request_context.calculate_total_time()
                 log("agent", f"Request completed in {total_time:.2f}s", request_context)
