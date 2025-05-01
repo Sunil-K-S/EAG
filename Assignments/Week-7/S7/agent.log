@@ -1,0 +1,246 @@
+[22:57:43] [memory] No existing index found, starting fresh
+INFO:     Started server process [61071]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:20]   (took 0.00s) MCP connection established
+[05/01/25 22:58:20] INFO     Processing request of type ListToolsRequest         server.py:534
+[22:58:20]   (took 0.00s) Available tools: - process_video_tool: Process a YouTube video to 
+extract and index its content
+    
+    This tool takes a YouTube URL and processes the video to extract its content,
+    breaking it into chunks and indexing them for later search.
+    
+- search_video_tool: Search for content within a YouTube video
+    
+    This tool searches for specific content within a previously processed YouTube video.
+    It requires both the video URL and the search query.
+    
+[22:58:20]   (took 0.00s) Extracting perception...
+[22:58:20]   (took 0.00s) Retrieving memories...
+[22:58:20] [memory] No index or data available for retrieval
+[22:58:20]   (took 0.00s) Generating plan...
+[22:58:23]   (took 0.00s) Executing plan...
+[22:58:23]   (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'action': 'process'}}
+[22:58:23]   (took 0.00s) URL context: https://www.youtube.com/watch?v=ukzFI9rgwfU
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:23]   (took 0.00s) MCP connection established
+[22:58:23] [action] Executing plan: FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'action': 'process'}}
+[22:58:23] [parser] Parsed: process_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'action': 'process'}}}
+[22:58:23] [tool] ⚙️ Attempt 1/3: Calling 'process_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'action': 'process'}}}
+[05/01/25 22:58:23] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:25] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:25] [tool] ✅ process_video_tool result: ['{"status":"success","message":"Processed 16 chunks from video","timestamp":1746120505.124591,"error_details":null,"chunks_processed":16,"video_id":"ukzFI9rgwfU","processing_time":1.5639820098876953}']
+[22:58:25] [memory] Adding item with text: '['{"status":"success","message":"Processed 16 chun...', tags: []
+[22:58:25] [memory] Saved index with 1 items
+[22:58:25]   (took 0.00s) Video processed successfully, following up with search...
+[22:58:26]   (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'query': 'What is supervised learning?', 
+'action': 'search'}}
+[22:58:26]   (took 0.00s) URL context: https://www.youtube.com/watch?v=ukzFI9rgwfU
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:27]   (took 0.00s) MCP connection established
+[22:58:27] [action] Executing plan: FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'query': 'What is supervised learning?', 'action': 'search'}}
+[22:58:27] [parser] Parsed: search_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[22:58:27] [tool] ⚙️ Attempt 1/3: Calling 'search_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[05/01/25 22:58:27] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:28] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:28] [tool] ✅ search_video_tool result: ['{"status":"success","message":"Found 3 relevant segments","timestamp":1746120508.676099,"error_details":null,"results":[{"timestamp":"05:16","start":316.0,"content":"feedback to the training model and ask it to predict until it learns i hope you\'ve understood supervised and unsupervised learning so let\'s have a quick quiz you have to determine whether the given scenarios uses supervised or unsupervised learning simple right scenario one facebook recognizes your friend in a picture from an album of tagged photographs scenario 2 netflix recommends new movies based on someone\'s past movie choices","score":1.0},{"timestamp":"02:24","start":144.319,"content":"believe me it is but what happens when the choices become complicated as in the case of song b that\'s when machine learning comes in it learns the data builds the prediction model and when the new data point comes in it can easily predict for it more the data better the model higher will be the accuracy there are many ways in which the machine learns it could be either supervised learning unsupervised learning or reinforcement learning let\'s first quickly understand supervised learning","score":1.0},{"timestamp":"04:18","start":258.0,"content":"so here we interpret these two clusters as batsmen and bowlers the important point to note here is that there were no labels of batsmen and bowlers hence the learning with unlabeled data is unsupervised learning so we saw supervised learning where the data was labeled and the unsupervised learning where the data was unlabeled and then there is reinforcement learning which is a reward based learning or we can say that it works on the principle of feedback here let\'s say you provide the system with an image of a dog and ask it","score":1.0}],"total_results":3,"query_time":1.249443769454956}']
+[22:58:28] [memory] Adding item with text: '['{"status":"success","message":"Found 3 relevant ...', tags: []
+[22:58:28] [memory] Saved index with 2 items
+[22:58:28]   (took 0.00s) Request completed in 9.01s
+INFO:     127.0.0.1:54811 - "POST /agent HTTP/1.1" 200 OK
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:29] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) MCP connection established
+[05/01/25 22:58:29] INFO     Processing request of type ListToolsRequest         server.py:534
+[22:58:29] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Available tools: - 
+process_video_tool: Process a YouTube video to extract and index its content
+    
+    This tool takes a YouTube URL and processes the video to extract its content,
+    breaking it into chunks and indexing them for later search.
+    
+- search_video_tool: Search for content within a YouTube video
+    
+    This tool searches for specific content within a previously processed YouTube video.
+    It requires both the video URL and the search query.
+    
+[22:58:29] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Extracting perception...
+[22:58:29] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Retrieving memories...
+[22:58:29] [memory] Search results indices: [1 0]
+[22:58:29] [memory] Search scores: [0.0029309  0.00192673]
+[22:58:29] [memory] Final retrieved results count: 2
+[22:58:29] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Generating plan...
+[22:58:32] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Executing plan...
+[22:58:32] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'action': 'process'}}
+[22:58:32] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) URL context: 
+https://www.youtube.com/watch?v=h0e2HAPTGF4
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:32] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) MCP connection established
+[22:58:32] [action] Executing plan: FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'action': 'process'}}
+[22:58:32] [parser] Parsed: process_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'action': 'process'}}}
+[22:58:32] [tool] ⚙️ Attempt 1/3: Calling 'process_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'action': 'process'}}}
+[05/01/25 22:58:32] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:35] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:35] [tool] ✅ process_video_tool result: ['{"status":"success","message":"Processed 98 chunks from video","timestamp":1746120515.314464,"error_details":null,"chunks_processed":98,"video_id":"h0e2HAPTGF4","processing_time":2.7333943843841553}']
+[22:58:35] [memory] Adding item with text: '['{"status":"success","message":"Processed 98 chun...', tags: []
+[22:58:35] [memory] Saved index with 3 items
+[22:58:35] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Video processed successfully, 
+following up with search...
+[22:58:38] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'query': 'What is supervised learning?', 
+'action': 'search'}}
+[22:58:38] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) URL context: 
+https://www.youtube.com/watch?v=h0e2HAPTGF4
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:38] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) MCP connection established
+[22:58:38] [action] Executing plan: FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'query': 'What is supervised learning?', 'action': 'search'}}
+[22:58:38] [parser] Parsed: search_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[22:58:38] [tool] ⚙️ Attempt 1/3: Calling 'search_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=h0e2HAPTGF4', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[05/01/25 22:58:38] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:41] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:41] [tool] ✅ search_video_tool result: ['{"status":"success","message":"Found 3 relevant segments","timestamp":1746120521.4795609,"error_details":null,"results":[{"timestamp":"13:42","start":822.67,"content":"That\'s the paradigm. Set of observations, potentially\\nlabeled, potentially not. Think about how do we do\\ninference to find a model. And then how do we use that\\nmodel to make predictions. What we\'re going\\nto see, and we\'re going to see multiple\\nexamples today, is that that\\nlearning can be done in one of two very broad ways. The first one is called\\nsupervised learning. And in that case,\\nfor every new example I give you as part\\nof the training data, I have a label on it. I know the kind of thing it is.","score":1.0},{"timestamp":"07:24","start":444.794,"content":"his definition of\\nmachine learning is the field of study\\nthat gives computers the ability to learn without\\nbeing explicitly programmed. And I think many\\npeople would argue, he wrote the first such program. It learned from experience. In his case, it played checkers. Kind of shows you how\\nthe field has progressed. But we started with checkers,\\nwe got to chess, we now do Go. But it played checkers. It beat national level\\nplayers, most importantly, it learned to\\nimprove its methods by watching how it did in games\\nand then inferring something","score":1.0},{"timestamp":"03:10","start":190.75,"content":"we would call labeled data. I know labels on my\\nexamples, and I\'m going to use that to\\ntry and define classes that I can learn, and\\nclustering working well, when I don\'t have labeled data. And we\'ll see what that\\nmeans in a couple of minutes. But we\'re going to give\\nyou an early view of this. Unless Professor Guttag\\nchanges his mind, we\'re probably not going to\\nshow you the current really sophisticated machine\\nlearning methods like convolutional neural\\nnets or deep learning, things you\'ll read\\nabout in the news. But you\'re going to\\nget a sense of what\'s behind those, by looking\\nat what we do when we talk about learning algorithms.","score":1.0}],"total_results":3,"query_time":2.848712921142578}']
+[22:58:41] [memory] Adding item with text: '['{"status":"success","message":"Found 3 relevant ...', tags: []
+[22:58:41] [memory] Saved index with 4 items
+[22:58:41] [3723c6b4-94a6-47e6-a6bd-659c50d868ae]  (took 0.00s) Request completed in 12.09s
+INFO:     127.0.0.1:54811 - "POST /agent HTTP/1.1" 200 OK
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:42]   (took 0.00s) MCP connection established
+[05/01/25 22:58:42] INFO     Processing request of type ListToolsRequest         server.py:534
+[22:58:42]   (took 0.00s) Available tools: - process_video_tool: Process a YouTube video to 
+extract and index its content
+    
+    This tool takes a YouTube URL and processes the video to extract its content,
+    breaking it into chunks and indexing them for later search.
+    
+- search_video_tool: Search for content within a YouTube video
+    
+    This tool searches for specific content within a previously processed YouTube video.
+    It requires both the video URL and the search query.
+    
+[22:58:42]   (took 0.00s) Extracting perception...
+[22:58:42]   (took 0.00s) Retrieving memories...
+[22:58:42] [memory] Search results indices: [1 3 0 2]
+[22:58:42] [memory] Search scores: [0.0029309  0.00221016 0.00192673 0.00191082]
+[22:58:42] [memory] Final retrieved results count: 3
+[22:58:42]   (took 0.00s) Generating plan...
+[22:58:44]   (took 0.00s) Executing plan...
+[22:58:44]   (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'action': 'process'}}
+[22:58:44]   (took 0.00s) URL context: https://www.youtube.com/watch?v=9gGnTQTYNaE
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:45]   (took 0.00s) MCP connection established
+[22:58:45] [action] Executing plan: FUNCTION_CALL:process_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'action': 'process'}}
+[22:58:45] [parser] Parsed: process_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'action': 'process'}}}
+[22:58:45] [tool] ⚙️ Attempt 1/3: Calling 'process_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'action': 'process'}}}
+[05/01/25 22:58:45] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:46] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:46] [tool] ✅ process_video_tool result: ['{"status":"success","message":"Processed 15 chunks from video","timestamp":1746120526.6880069,"error_details":null,"chunks_processed":15,"video_id":"9gGnTQTYNaE","processing_time":1.163794755935669}']
+[22:58:46] [memory] Adding item with text: '['{"status":"success","message":"Processed 15 chun...', tags: []
+[22:58:46] [memory] Saved index with 5 items
+[22:58:46]   (took 0.00s) Video processed successfully, following up with search...
+[22:58:48]   (took 0.00s) Starting plan execution: 
+FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 
+'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'query': 'What is supervised learning?', 
+'action': 'search'}}
+[22:58:48]   (took 0.00s) URL context: https://www.youtube.com/watch?v=9gGnTQTYNaE
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:32: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('url')
+/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-7/S7/mcp-server.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+  @validator('query')
+[22:58:48]   (took 0.00s) MCP connection established
+[22:58:48] [action] Executing plan: FUNCTION_CALL:search_video_tool|input_data={'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'query': 'What is supervised learning?', 'action': 'search'}}
+[22:58:48] [parser] Parsed: search_video_tool → {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[22:58:48] [tool] ⚙️ Attempt 1/3: Calling 'search_video_tool' with: {'input_data': {'input_data': {'url': 'https://www.youtube.com/watch?v=9gGnTQTYNaE', 'query': 'What is supervised learning?', 'action': 'search'}}}
+[05/01/25 22:58:48] INFO     Processing request of type CallToolRequest          server.py:534
+[05/01/25 22:58:49] INFO     Warning: PydanticDeprecatedSince20: The `dict`      server.py:524
+                             method is deprecated; use `model_dump` instead.                  
+                             Deprecated in Pydantic V2.0 to be removed in V3.0.               
+                             See Pydantic V2 Migration Guide at                               
+                             https://errors.pydantic.dev/2.11/migration/                      
+                    INFO     Warning: PydanticDeprecatedSince20: The `json`      server.py:524
+                             method is deprecated; use `model_dump_json`                      
+                             instead. Deprecated in Pydantic V2.0 to be removed               
+                             in V3.0. See Pydantic V2 Migration Guide at                      
+                             https://errors.pydantic.dev/2.11/migration/                      
+[22:58:49] [tool] ✅ search_video_tool result: ['{"status":"success","message":"Found 3 relevant segments","timestamp":1746120529.76717,"error_details":null,"results":[{"timestamp":"01:08","start":68.85,"content":"learning is often thought of as scalable machine\\nlearning because it automates a lot of the feature extraction process away and eliminates\\nthe some of the human intervention involved to enable the use of some really, really big\\ndata sets. But for today we\'ll focus just on machine\\nlearning, so we\'ll get rid of the other two and dive one level deeper and talk about the\\ndifferent types of machine learning. Ok. So, the first type that we have is called\\n“supervised learning”.","score":1.0},{"timestamp":"03:22","start":202.111,"content":"OK, so the other type of supervised learning\\nis regression. Now, this is when we build an equation using\\nvarious input values with their specific weights determined by the overall value of their impact\\non the outcome. And we use these to generate an estimate for\\nan output value. So, let me give you another example here. So, airlines rely heavily on machine learning,\\nand they use regression techniques to accurately","score":1.0},{"timestamp":"01:42","start":102.639,"content":"And this is when we use labeled data sets to train algorithms\\nto classify data or predict outcomes. And when I say labeled, I mean that the rows\\nin the data set are labeled, tagged, or classified in some interesting way that tells us something\\nabout that data. So, it could be a yes or a no, or it could\\nbe a particular category of some, you know, different attribute. OK, so how do we apply supervised machine\\nlearning techniques? Well, this really depends on your particular\\nuse-case.","score":1.0}],"total_results":3,"query_time":1.2200429439544678}']
+[22:58:49] [memory] Adding item with text: '['{"status":"success","message":"Found 3 relevant ...', tags: []
+[22:58:49] [memory] Saved index with 6 items
+[22:58:49]   (took 0.00s) Request completed in 7.53s
+INFO:     127.0.0.1:54811 - "POST /agent HTTP/1.1" 200 OK
