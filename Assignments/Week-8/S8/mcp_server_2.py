@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 from markitdown import MarkItDown
 import time
-from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput, PythonCodeInput, PythonCodeOutput, UrlInput, FilePathInput, MarkdownInput, MarkdownOutput, ChunkListOutput
+from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput, PythonCodeInput, PythonCodeOutput, UrlInput, FilePathInput, MarkdownInput, MarkdownOutput, ChunkListOutput, ExtractedTable, WebpageExtractionOutput
 from tqdm import tqdm
 import hashlib
 from pydantic import BaseModel
@@ -184,23 +184,83 @@ def replace_images_with_captions(markdown: str) -> str:
 
 
 @mcp.tool()
-def extract_webpage(input: UrlInput) -> MarkdownOutput:
-    """Extract and convert webpage content to markdown. Usage: extract_webpage|input={"url": "https://example.com"}"""
+def extract_webpage(input: UrlInput) -> WebpageExtractionOutput:
+    """
+    Extract and convert webpage content to markdown, and return any tables/lists as structured data.
+    
+    Usage: extract_webpage|input={"url": "https://example.com"}
+
+    Returns:
+    - markdown (str): The full markdown content of the page.
+    - tables (list of ExtractedTable): All tables found in the page, extracted from both HTML and markdown tables. Each table has headers and rows.
+    - lists (list of list of str): All bullet or numbered lists found in the page, as lists of strings.
+    """
 
     downloaded = trafilatura.fetch_url(input.url)
-    if not downloaded:
-        return MarkdownOutput(markdown="Failed to download the webpage.")
-
-    markdown = trafilatura.extract(
-        downloaded,
-        include_comments=False,
-        include_tables=True,
-        include_images=True,
-        output_format='markdown'
-    ) or ""
+    markdown = None
+    html = None
+    if downloaded:
+        html = downloaded
+        markdown = trafilatura.extract(
+            downloaded,
+            include_comments=False,
+            include_tables=True,
+            include_images=True,
+            output_format='markdown'
+        )
+    
+    # Fallback to MarkItDown if trafilatura fails
+    if not markdown or not markdown.strip():
+        try:
+            converter = MarkItDown()
+            markdown = converter.convert(input.url).text_content
+        except Exception as e:
+            return WebpageExtractionOutput(markdown=f"Failed to extract webpage with both trafilatura and markitdown: {e}")
 
     markdown = replace_images_with_captions(markdown)
-    return MarkdownOutput(markdown=markdown)
+
+    # --- Table extraction ---
+    tables = []
+    try:
+        import pandas as pd
+        if html:
+            for df in pd.read_html(html):
+                tables.append(ExtractedTable(headers=list(df.columns), rows=df.values.tolist()))
+    except Exception as e:
+        mcp_log("WARN", f"Table extraction from HTML failed: {e}")
+
+    # --- Markdown table extraction (simple regex) ---
+    md_table_pattern = re.compile(r'(\|.+\|\n)(\|[\s\S]+?\|\n)+', re.MULTILINE)
+    for match in md_table_pattern.finditer(markdown):
+        table_md = match.group(0)
+        lines = [l.strip() for l in table_md.strip().splitlines() if l.strip()]
+        if len(lines) >= 2:
+            headers = [h.strip() for h in lines[0].strip('|').split('|')]
+            rows = []
+            for row_line in lines[2:]:
+                row = [c.strip() for c in row_line.strip('|').split('|')]
+                if len(row) == len(headers):
+                    rows.append(row)
+            if rows:
+                tables.append(ExtractedTable(headers=headers, rows=rows))
+
+    # --- List extraction (bulleted or numbered) ---
+    lists = []
+    list_pattern = re.compile(r'^(?:\s*[-*+]\s+.+|\s*\d+\.\s+.+)$', re.MULTILINE)
+    current_list = []
+    for line in markdown.splitlines():
+        if list_pattern.match(line):
+            item = line.lstrip('-*+0123456789. ').strip()
+            if item:
+                current_list.append(item)
+        else:
+            if current_list:
+                lists.append(current_list)
+                current_list = []
+    if current_list:
+        lists.append(current_list)
+
+    return WebpageExtractionOutput(markdown=markdown, tables=tables, lists=lists)
 
 @mcp.tool()
 def extract_pdf(input: FilePathInput) -> MarkdownOutput:

@@ -1,0 +1,59 @@
+uvicorn mcp_server_fastapi:app --reload
+
+INFO:     Will watch for changes in these directories: ['/Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-8/S8']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [70563] using StatReload
+[05/02/25 16:08:12] INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+                    INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+INFO:     Started server process [70565]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+[DEBUG] Raw data received for spreadsheet: [{'Rank': 1, 'Driver': 'Max Verstappen', 'Team': 'Red Bull'}, {'Rank': 2, 'Driver': 'Charles Leclerc', 'Team': 'Ferrari'}, {'Rank': 3, 'Driver': 'Lewis Hamilton', 'Team': 'Mercedes'}, {'Rank': 4, 'Driver': 'Fernando Alonso', 'Team': 'Aston Martin'}, {'Rank': 5, 'Driver': 'Carlos Sainz', 'Team': 'Ferrari'}, {'Rank': 6, 'Driver': 'George Russell', 'Team': 'Mercedes'}, {'Rank': 7, 'Driver': 'Lando Norris', 'Team': 'McLaren'}, {'Rank': 8, 'Driver': 'Sergio Perez', 'Team': 'Red Bull'}, {'Rank': 9, 'Driver': 'Alexander Albon', 'Team': 'Williams'}, {'Rank': 10, 'Driver': 'Oscar Piastri', 'Team': 'McLaren'}]
+[DEBUG] Writing values to spreadsheet: [['Rank', 'Driver', 'Team'], [1, 'Max Verstappen', 'Red Bull'], [2, 'Charles Leclerc', 'Ferrari'], [3, 'Lewis Hamilton', 'Mercedes'], [4, 'Fernando Alonso', 'Aston Martin'], [5, 'Carlos Sainz', 'Ferrari'], [6, 'George Russell', 'Mercedes'], [7, 'Lando Norris', 'McLaren'], [8, 'Sergio Perez', 'Red Bull'], [9, 'Alexander Albon', 'Williams'], [10, 'Oscar Piastri', 'McLaren']]
+[DEBUG] Google Sheets API response: {'spreadsheetId': '1uiz20MGxlRbn_nLRRkvyeU4NdhcFl5SeFT_5Zimt-Y4', 'updatedRange': 'Sheet1!A1:C11', 'updatedRows': 11, 'updatedColumns': 3, 'updatedCells': 33}
+[INFO] Data written to spreadsheet.
+INFO:     127.0.0.1:65075 - "POST /tool/create_spreadsheet HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'core/loop.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [70565]
+[05/02/25 16:14:48] INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+                    INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+INFO:     Started server process [71572]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+[DEBUG] Raw data received for spreadsheet: [{'racer': 'Max Verstappen'}, {'racer': 'Ayrton Senna'}, {'racer': 'Lewis Hamilton'}, {'racer': 'Michael Schumacher'}, {'racer': 'Juan Manuel Fangio'}, {'racer': 'Alain Prost'}, {'racer': 'Jackie Stewart'}, {'racer': 'Niki Lauda'}, {'racer': 'Fernando Alonso'}, {'racer': 'Oscar Piastri'}]
+[DEBUG] Writing values to spreadsheet: [['racer'], ['Max Verstappen'], ['Ayrton Senna'], ['Lewis Hamilton'], ['Michael Schumacher'], ['Juan Manuel Fangio'], ['Alain Prost'], ['Jackie Stewart'], ['Niki Lauda'], ['Fernando Alonso'], ['Oscar Piastri']]
+[DEBUG] Google Sheets API response: {'spreadsheetId': '17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I', 'updatedRange': 'Sheet1!A1:A11', 'updatedRows': 11, 'updatedColumns': 1, 'updatedCells': 11}
+[INFO] Data written to spreadsheet.
+INFO:     127.0.0.1:65271 - "POST /tool/create_spreadsheet HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65276 - "POST /tool/send_email HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'core/loop.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71572]
+[05/02/25 16:55:13] INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+                    INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+INFO:     Started server process [77129]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'core/loop.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77129]
+[05/02/25 16:56:43] INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+                    INFO     file_cache is only supported with                  __init__.py:49
+                             oauth2client<4.0.0                                               
+INFO:     Started server process [77356]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

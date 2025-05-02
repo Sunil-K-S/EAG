@@ -3,6 +3,7 @@
 from typing import Dict, Any, Union
 from pydantic import BaseModel
 import ast
+import json
 
 # Optional logging fallback
 try:
@@ -11,7 +12,7 @@ except ImportError:
     import datetime
     def log(stage: str, msg: str):
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        print(f"[{now}] [{stage}] {msg}")
+        print("[{}] [{}]".format(now, stage), msg)
 
 
 class ToolCallResult(BaseModel):
@@ -26,6 +27,7 @@ def parse_function_call(response: str) -> tuple[str, Dict[str, Any]]:
     Parses a FUNCTION_CALL string like:
     "FUNCTION_CALL: add|a=5|b=7"
     Into a tool name and a dictionary of arguments.
+    Handles both JSON and Python-style dict/list arguments.
     """
     try:
         if not response.startswith("FUNCTION_CALL:"):
@@ -41,11 +43,17 @@ def parse_function_call(response: str) -> tuple[str, Dict[str, Any]]:
                 raise ValueError(f"Invalid parameter: {part}")
             key, val = part.split("=", 1)
 
-            # Try parsing as literal, fallback to string
+            # Debug print for raw value
+            print(f"[parser] Parsing value for key '{key}': {val}")
+
+            # Try parsing as Python literal, then as JSON, fallback to string
             try:
                 parsed_val = ast.literal_eval(val)
             except Exception:
-                parsed_val = val.strip()
+                try:
+                    parsed_val = json.loads(val)
+                except Exception:
+                    parsed_val = val.strip()
 
             # Support nested keys (e.g., input.value)
             keys = key.split(".")

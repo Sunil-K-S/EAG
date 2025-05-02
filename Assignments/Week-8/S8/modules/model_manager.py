@@ -3,10 +3,13 @@ import json
 import yaml
 import requests
 from pathlib import Path
-from google import genai
+import google.generativeai as genai
 from dotenv import load_dotenv
+from modules.telegram_tool import TelegramTool
 
 load_dotenv()
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 ROOT = Path(__file__).parent.parent
 MODELS_JSON = ROOT / "config" / "models.json"
@@ -21,10 +24,19 @@ class ModelManager:
         self.model_info = self.config["models"][self.text_model_key]
         self.model_type = self.model_info["type"]
 
-        # ✅ Gemini initialization (your style)
+        # ✅ Gemini initialization (new style)
         if self.model_type == "gemini":
-            api_key = os.getenv("GEMINI_API_KEY")
-            self.client = genai.Client(api_key=api_key)
+            # You can change the model name here if needed
+            self.model = genai.GenerativeModel('gemini-2.0-flash')
+
+        # Register tools here
+        self.tools = [
+            TelegramTool(),
+            # Add other tools here as you implement them
+        ]
+
+    def get_all_tools(self):
+        return self.tools
 
     async def generate_text(self, prompt: str) -> str:
         if self.model_type == "gemini":
@@ -36,11 +48,7 @@ class ModelManager:
         raise NotImplementedError(f"Unsupported model type: {self.model_type}")
 
     def _gemini_generate(self, prompt: str) -> str:
-        response = self.client.models.generate_content(
-            model=self.model_info["model"],
-            contents=prompt
-        )
-
+        response = self.model.generate_content(prompt)
         # ✅ Safely extract response text
         try:
             return response.text.strip()

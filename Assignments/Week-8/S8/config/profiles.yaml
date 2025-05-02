@@ -27,14 +27,16 @@ persona:
 mcp_servers:
   - id: math
     script: mcp_server_1.py
-    cwd: I:/TSAI/2025/EAG/Session 8/S8
+    cwd: /Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-8/S8
   - id: documents
     script: mcp_server_2.py
-    cwd: I:/TSAI/2025/EAG/Session 8/S8
+    cwd: /Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-8/S8
   - id: websearch
     script: mcp_server_3.py
-    cwd: I:/TSAI/2025/EAG/Session 8/S8
-
+    cwd: /Users/sunilkovilasampath/Workspace/gc/TSAI/EAG/Assignments/Week-8/S8
+  - id: gmail_and_gdrive
+    url: http://localhost:8000
+    protocol: http
 
 
 

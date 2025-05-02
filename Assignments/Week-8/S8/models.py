@@ -52,4 +52,13 @@ class ChunkListOutput(BaseModel):
 class ShellCommandInput(BaseModel):
     command: str
 
+class ExtractedTable(BaseModel):
+    headers: List[str]
+    rows: List[List[str]]
+
+class WebpageExtractionOutput(BaseModel):
+    markdown: str
+    tables: List[ExtractedTable] = []
+    lists: List[List[str]] = []
+
 

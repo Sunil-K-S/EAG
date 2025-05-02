@@ -6,6 +6,7 @@ import json
 from dotenv import load_dotenv
 from modules.model_manager import ModelManager
 from modules.tools import summarize_tools
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 model = ModelManager()
 tool_context = summarize_tools(model.get_all_tools()) if hasattr(model, "get_all_tools") else ""
@@ -21,7 +22,7 @@ class PerceptionResult(BaseModel):
 async def extract_perception(user_input: str) -> PerceptionResult:
     """
     Uses LLMs to extract structured info:
-    - intent: user’s high-level goal
+    - intent: user's high-level goal
     - entities: keywords or values
     - tool_hint: likely MCP tool name (optional)
     """
@@ -57,7 +58,7 @@ Output only the dictionary on a single line. Do NOT wrap it in ```json or other 
         try:
             parsed = json.loads(clean.replace("null", "null"))  # Clean up non-Python nulls
         except Exception as json_error:
-            print(f"[perception] JSON parsing failed: {json_error}")
+            print("[perception] JSON parsing failed:", json_error)
             parsed = {}
 
         # Ensure Keys
@@ -76,5 +77,5 @@ Output only the dictionary on a single line. Do NOT wrap it in ```json or other 
 
 
     except Exception as e:
-        print(f"[perception] ⚠️ LLM perception failed: {e}")
+        print("[perception] ⚠️ LLM perception failed:", e)
         return PerceptionResult(user_input=user_input)

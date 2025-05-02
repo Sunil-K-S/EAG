@@ -1,0 +1,239 @@
+python telegram_agent_runner.py
+
+[TelegramAgent] Listening for new messages. Ctrl+C to stop.
+[Received] create a spreadsheet and email me the top 10 F1 racers at sunilks.eminem@gmail.com from chat_id 847206493
+🧠 Cortex-R Agent Ready
+Agent before initialize
+[05/02/25 16:15:03] INFO     Processing request of type ListToolsRequest         server.py:534
+<frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+<frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+<frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+<frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+<frozen importlib._bootstrap>:488: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+[05/02/25 16:15:04] INFO     Processing request of type ListToolsRequest         server.py:534
+[05/02/25 16:15:05] INFO     Processing request of type ListToolsRequest         server.py:534
+[DEBUG] Discovered tools:
+  - add: Add two numbers. Usage: add|input={"a": 10, "b": 5}
+  - sqrt: Compute the square root of a number. Usage: sqrt|input={"a": 49}
+  - subtract: Subtract one number from another. Usage: subtract|a=10|b=3
+  - multiply: Multiply two integers. Usage: multiply|a=6|b=7
+  - divide: Divide one number by another. Usage: divide|a=20|b=4
+  - power: Compute a raised to the power of b. Usage: power|a=2|b=10
+  - cbrt: Compute the cube root of a number. Usage: cbrt|a=27
+  - factorial: Compute the factorial of a number. Usage: factorial|a=5
+  - remainder: Compute the remainder of a divided by b. Usage: remainder|a=17|b=4
+  - sin: Compute sine of an angle in radians. Usage: sin|a=1
+  - cos: Compute cosine of an angle in radians. Usage: cos|a=1
+  - tan: Compute tangent of an angle in radians. Usage: tan|a=1
+  - mine: special mining tool
+  - create_thumbnail: Create a 100x100 thumbnail from image. Usage: create_thumbnail|image_path="example.jpg"
+  - strings_to_chars_to_int: Convert characters to ASCII values. Usage: strings_to_chars_to_int|input={"string": "INDIA"}
+  - int_list_to_exponential_sum: Sum exponentials of int list. Usage: int_list_to_exponential_sum|input={"numbers": [65, 66, 67]}
+  - fibonacci_numbers: Generate first n Fibonacci numbers. Usage: fibonacci_numbers|n=10
+  - run_python_sandbox: Run math code in Python sandbox. Usage: run_python_sandbox|input={"code": "result = math.sqrt(49)"}
+  - run_shell_command: Run a safe shell command. Usage: run_shell_command|input={"command": "ls"}
+  - run_sql_query: Run safe SELECT-only SQL query. Usage: run_sql_query|input={"code": "SELECT * FROM users LIMIT 5"}
+  - search_documents: Search indexed documents for relevant content. Usage: search_documents|query="india Current GDP" 
+  - extract_webpage: 
+    Extract and convert webpage content to markdown, and return any tables/lists as structured data.
+    
+    Usage: extract_webpage|input={"url": "https://example.com"}
+
+    Returns:
+    - markdown (str): The full markdown content of the page.
+    - tables (list of ExtractedTable): All tables found in the page, extracted from both HTML and markdown tables. Each table has headers and rows.
+    - lists (list of list of str): All bullet or numbered lists found in the page, as lists of strings.
+    
+  - extract_pdf: Convert PDF file content to markdown format. Usage: extract_pdf|input={"file_path": "documents/dlf.pdf"}
+  - search: 
+    Search DuckDuckGo and return formatted results.
+
+    Args:
+        query: The search query string
+        max_results: Maximum number of results to return (default: 10)
+        ctx: MCP context for logging
+    
+  - fetch_content: 
+    Fetch and parse content from a webpage URL.
+
+    Args:
+        url: The webpage URL to fetch content from
+        ctx: MCP context for logging
+    
+  - send_email: Send an email using Gmail API. Parameters: to_email (str), subject (str), body (str)
+  - create_spreadsheet: Create a new spreadsheet in Google Drive. Parameters: title (str), data (list of dicts, optional)
+[DIAG] Entered AgentLoop.run
+[agent] Starting session: session-1746182705-ebc815
+[DIAG] Top of step loop 0
+[loop] Step 1 of 3
+[DIAG] Before extract_perception
+[DIAG] After extract_perception
+[DIAG] Before PerceptionResult parse
+[perception] Intent: create spreadsheet and email , Hint: None
+[DIAG] Before memory retrieval
+[memory] Retrieved 0 memories
+[DIAG] Before decide_next_action
+[DIAG] Before prompt construction in generate_plan
+[DIAG] LLM output before log: FUNCTION_CALL: search|query="top 10 F1 racers"
+[16:15:08] [plan] LLM output: FUNCTION_CALL: search|query="top 10 F1 racers"
+[DIAG] After log call in generate_plan
+[plan] FUNCTION_CALL: search|query="top 10 F1 racers"
+[DIAG] Before parse_function_call
+[parser] Parsing value for key 'query': "top 10 F1 racers"
+[16:15:08] [parser] Parsed: search → {'query': 'top 10 F1 racers'}
+[DIAG] After parse_function_call search {'query': 'top 10 F1 racers'}
+[debug] About to call tool: search with arguments: {'query': 'top 10 F1 racers'}
+[DIAG] Before mcp.call_tool
+[05/02/25 16:15:08] INFO     Processing request of type CallToolRequest          server.py:534
+[05/02/25 16:15:09] INFO     HTTP Request: POST                                _client.py:1740
+                             https://html.duckduckgo.com/html "HTTP/1.1 200                   
+                             OK"                                                              
+[DIAG] After mcp.call_tool
+[debug] Raw tool response:
+ [TextContent(type='text', text="Found 10 search results:\n\n1. The 10 best Formula 1 drivers ever: Hamilton, Schumacher
+& more - Autosport\n   URL: https://www.autosport.com/f1/news/whos-the-best-formula-1-driver-schumacher-hamilton-senna-
+more-4983210/4983210/\n   Summary: Max Verstappen, Red Bull Racing RB18. Photo by: Mark Sutton / Motorsport Images 3.
+Max Verstappen - 63 wins. First race: 2015 Australian Grand Prix; World championships: 4 (2021, 2022, 2023, 2024)\n\n2.
+The Top 10 F1 drivers of 2023 - as chosen by the drivers\n   URL: https://www.formula1.com/en/latest/article/exclusive-
+the-top-10-f1-drivers-of-2023-as-chosen-by-the-drivers.12ArGhZ4kc992A9TIc8j7B\n   Summary: Verstappen sealedtopspot
+after a commanding campaign that saw him win the title in Qatar with five Grands Prix - and twoF1Sprints - to go. While
+his team mate Sergio Perez was second in the drivers' championship - giving Red Bull their first ever 1-2 finish in the
+standings - the Mexican was down in 10th in the drivers' poll ...\n\n3. Top 10 Best Formula 1 Drivers of All Time -
+TheTopTens\n   URL: https://www.thetoptens.com/auto-racing/best-formula-1-driver/\n   Summary: Ayrton Senna Ayrton Senna
+da Silva (21 March 1960 - 1 May 1994) was a Brazilian racing driver who won three Formula One world championships for
+McLaren in 1988, 1990 and 1991 and is regarded as one of the greatest Formula One drivers of all time. He was killed in
+an accident while leading the 1994 San Marino Grand... read more. Brilliant, ruthless, determined, fast, and
+charismatic.\n\n4. The top 10 best F1 drivers in 2024 named and ranked\n   URL: https://www.sportbible.com/f1/top-ten-
+formula-one-drivers-2024-805452-20240402\n   Summary: Top10Formula One drivers as of 2024. 10th- Oscar Piastri (McLaren)
+... Verstappen takes thetopspot, as he does almost every single race. With three consecutive world championships, and 19
+wins ...\n\n5. Top 10 Best F1 Drivers of All Time - F1-Fansite.com\n   URL:
+https://www.f1-fansite.com/f1-drivers/top-10-best-f1-drivers-of-all-time/\n   Summary: Sir Jackie Stewart is our last
+but not least on ourtop10list. This legendary Scottish driver who is still a regular spectator of Formula 1 races at his
+age of 79, drove 100 races and scored an unbelievable amount of 43 podiums. Stewart began Formula 1 racing at the age of
+26 and is dyslectic. He left school at the age of 15 and had no education.\n\n6. The best Formula 1 drivers of all time:
+The Top 10 - Red Bull\n   URL: https://www.redbull.com/gb-en/best-f1-drivers-of-all-time\n   Summary: Active inF1between
+1980 and 1991 then again in 1993, Prost took over the traditional French racing team Ligier in 1997. He renamed the team
+to Prost Grand Prix to compete in the Formula 1 World ...\n\n7. Best F1 Drivers By Wins | Top 10 Formula 1 Drivers of
+all Time\n   URL: https://www.seatunique.com/blog/formula-1-drivers-past-and-present/\n   Summary: Juan Manuel Fangio
+racing profile: Years active: 1950 - 1951, 1953 - 1958 Country: Argentina Teams: Alfa Romeo, Maserati, Mercedes and
+Ferarri Podiums: 35 Career points: 245 Grand Prix entered: 51 Races won: 24 Date of birth: 24/06/1911 Place of birth:
+Balcarce, Argentina Source: wikipedia.com The first decade of Formula 1 saw the dominance of one man - Juan Manuel
+Fangio.\n\n8. Revealed: The top 10 drivers of the F1 2024 season - PlanetF1\n   URL:
+https://www.planetf1.com/features/revealed-top-10-drivers-f1-2024-season\n   Summary: This piece will focus on the best
+drivers, so here are ourtop10rated on theF12024 grid. The best10drivers of theF12024 season10.) Fernando Alonso - 6.71.
+A year of great frustration ...\n\n9. 10 greatest Formula 1 drivers in history - Motorsport Tickets Blog\n   URL:
+https://motorsporttickets.com/blog/10-greatest-formula-1-drivers-in-history/\n   Summary: To date, there have been 781
+Formula 1 racing drivers from 41 different nationalities. The 2025 season has also seen an injection of new talent, with
+six rookie drivers joining the grid. ... (+1) greatest Formula 1 drivers10. Niki Lauda ... When Massa crossed the line
+and ended his season, he was at thetopof the championship standings. But ...\n\n10. Top 10 F1 Racers That You Should
+Know About - Sportz Business\n   URL: https://www.sportzbusiness.com/top-10-f1-racers-that-you-should-know-about/\n
+Summary: Here is theTop10Formula One Drivers You Must Know. Ayrton Senna; Ayrton is a Brazilian racing driver, who won
+three Formula One championship and participated in 41 total career wins. In 1984, he made his debut in Brazilian Grand
+Prix and qualified as 17 th in the race. In 1988, he won the title of Formula One World Championship for drivers at
+FIAF1motor racing in the 39 th season.\n", annotations=None)]
+[action] search →
+ [TextContent(type='text', text="Found 10 search results:\n\n1. The 10 best Formula 1 drivers ever: Hamilton, Schumacher
+& more - Autosport\n   URL: https://www.autosport.com/f1/news/whos-the-best-formula-1-driver-schumacher-hamilton-senna-
+more-4983210/4983210/\n   Summary: Max Verstappen, Red Bull Racing RB18. Photo by: Mark Sutton / Motorsport Images 3.
+Max Verstappen - 63 wins. First race: 2015 Australian Grand Prix; World championships: 4 (2021, 2022, 2023, 2024)\n\n2.
+The Top 10 F1 drivers of 2023 - as chosen by the drivers\n   URL: https://www.formula1.com/en/latest/article/exclusive-
+the-top-10-f1-drivers-of-2023-as-chosen-by-the-drivers.12ArGhZ4kc992A9TIc8j7B\n   Summary: Verstappen sealedtopspot
+after a commanding campaign that saw him win the title in Qatar with five Grands Prix - and twoF1Sprints - to go. While
+his team mate Sergio Perez was second in the drivers' championship - giving Red Bull their first ever 1-2 finish in the
+standings - the Mexican was down in 10th in the drivers' poll ...\n\n3. Top 10 Best Formula 1 Drivers of All Time -
+TheTopTens\n   URL: https://www.thetoptens.com/auto-racing/best-formula-1-driver/\n   Summary: Ayrton Senna Ayrton Senna
+da Silva (21 March 1960 - 1 May 1994) was a Brazilian racing driver who won three Formula One world championships for
+McLaren in 1988, 1990 and 1991 and is regarded as one of the greatest Formula One drivers of all time. He was killed in
+an accident while leading the 1994 San Marino Grand... read more. Brilliant, ruthless, determined, fast, and
+charismatic.\n\n4. The top 10 best F1 drivers in 2024 named and ranked\n   URL: https://www.sportbible.com/f1/top-ten-
+formula-one-drivers-2024-805452-20240402\n   Summary: Top10Formula One drivers as of 2024. 10th- Oscar Piastri (McLaren)
+... Verstappen takes thetopspot, as he does almost every single race. With three consecutive world championships, and 19
+wins ...\n\n5. Top 10 Best F1 Drivers of All Time - F1-Fansite.com\n   URL:
+https://www.f1-fansite.com/f1-drivers/top-10-best-f1-drivers-of-all-time/\n   Summary: Sir Jackie Stewart is our last
+but not least on ourtop10list. This legendary Scottish driver who is still a regular spectator of Formula 1 races at his
+age of 79, drove 100 races and scored an unbelievable amount of 43 podiums. Stewart began Formula 1 racing at the age of
+26 and is dyslectic. He left school at the age of 15 and had no education.\n\n6. The best Formula 1 drivers of all time:
+The Top 10 - Red Bull\n   URL: https://www.redbull.com/gb-en/best-f1-drivers-of-all-time\n   Summary: Active inF1between
+1980 and 1991 then again in 1993, Prost took over the traditional French racing team Ligier in 1997. He renamed the team
+to Prost Grand Prix to compete in the Formula 1 World ...\n\n7. Best F1 Drivers By Wins | Top 10 Formula 1 Drivers of
+all Time\n   URL: https://www.seatunique.com/blog/formula-1-drivers-past-and-present/\n   Summary: Juan Manuel Fangio
+racing profile: Years active: 1950 - 1951, 1953 - 1958 Country: Argentina Teams: Alfa Romeo, Maserati, Mercedes and
+Ferarri Podiums: 35 Career points: 245 Grand Prix entered: 51 Races won: 24 Date of birth: 24/06/1911 Place of birth:
+Balcarce, Argentina Source: wikipedia.com The first decade of Formula 1 saw the dominance of one man - Juan Manuel
+Fangio.\n\n8. Revealed: The top 10 drivers of the F1 2024 season - PlanetF1\n   URL:
+https://www.planetf1.com/features/revealed-top-10-drivers-f1-2024-season\n   Summary: This piece will focus on the best
+drivers, so here are ourtop10rated on theF12024 grid. The best10drivers of theF12024 season10.) Fernando Alonso - 6.71.
+A year of great frustration ...\n\n9. 10 greatest Formula 1 drivers in history - Motorsport Tickets Blog\n   URL:
+https://motorsporttickets.com/blog/10-greatest-formula-1-drivers-in-history/\n   Summary: To date, there have been 781
+Formula 1 racing drivers from 41 different nationalities. The 2025 season has also seen an injection of new talent, with
+six rookie drivers joining the grid. ... (+1) greatest Formula 1 drivers10. Niki Lauda ... When Massa crossed the line
+and ended his season, he was at thetopof the championship standings. But ...\n\n10. Top 10 F1 Racers That You Should
+Know About - Sportz Business\n   URL: https://www.sportzbusiness.com/top-10-f1-racers-that-you-should-know-about/\n
+Summary: Here is theTop10Formula One Drivers You Must Know. Ayrton Senna; Ayrton is a Brazilian racing driver, who won
+three Formula One championship and participated in 41 total career wins. In 1984, he made his debut in Brazilian Grand
+Prix and qualified as 17 th in the race. In 1988, he won the title of Formula One World Championship for drivers at
+FIAF1motor racing in the 39 th season.\n", annotations=None)]
+[DIAG] Top of step loop 1
+[loop] Step 2 of 3
+[DIAG] Before extract_perception
+[DIAG] After extract_perception
+[DIAG] Before PerceptionResult parse
+[perception] Intent: create spreadsheet of top 10 F1 racers and email it , Hint: spreadsheet
+[DIAG] Before memory retrieval
+[memory] Retrieved 3 memories
+[DIAG] Before decide_next_action
+[DIAG] Before prompt construction in generate_plan
+[DIAG] LLM output before log: I have already found the top 10 F1 racers. Now I need to create a spreadsheet with this information and email it to the user.
+FUNCTION_CALL: create_spreadsheet|title=Top 10 F1 Racers|data=[{"racer": "Max Verstappen"}, {"racer": "Ayrton Senna"}, {"racer": "Lewis Hamilton"}, {"racer": "Michael Schumacher"}, {"racer": "Juan Manuel Fangio"}, {"racer": "Alain Prost"}, {"racer": "Jackie Stewart"}, {"racer": "Niki Lauda"}, {"racer": "Fernando Alonso"}, {"racer": "Oscar Piastri"}]
+[16:15:12] [plan] LLM output: I have already found the top 10 F1 racers. Now I need to create a spreadsheet with this information and email it to the user.
+FUNCTION_CALL: create_spreadsheet|title=Top 10 F1 Racers|data=[{"racer": "Max Verstappen"}, {"racer": "Ayrton Senna"}, {"racer": "Lewis Hamilton"}, {"racer": "Michael Schumacher"}, {"racer": "Juan Manuel Fangio"}, {"racer": "Alain Prost"}, {"racer": "Jackie Stewart"}, {"racer": "Niki Lauda"}, {"racer": "Fernando Alonso"}, {"racer": "Oscar Piastri"}]
+[DIAG] After log call in generate_plan
+[plan] FUNCTION_CALL: create_spreadsheet|title=Top 10 F1 Racers|data=[{"racer": "Max Verstappen"}, {"racer": "Ayrton Senna"}, {"racer": "Lewis Hamilton"}, {"racer": "Michael Schumacher"}, {"racer": "Juan Manuel Fangio"}, {"racer": "Alain Prost"}, {"racer": "Jackie Stewart"}, {"racer": "Niki Lauda"}, {"racer": "Fernando Alonso"}, {"racer": "Oscar Piastri"}]
+[DIAG] Before parse_function_call
+[parser] Parsing value for key 'title': Top 10 F1 Racers
+[parser] Parsing value for key 'data': [{"racer": "Max Verstappen"}, {"racer": "Ayrton Senna"}, {"racer": "Lewis Hamilton"}, {"racer": "Michael Schumacher"}, {"racer": "Juan Manuel Fangio"}, {"racer": "Alain Prost"}, {"racer": "Jackie Stewart"}, {"racer": "Niki Lauda"}, {"racer": "Fernando Alonso"}, {"racer": "Oscar Piastri"}]
+[16:15:12] [parser] Parsed: create_spreadsheet → {'title': 'Top 10 F1 Racers', 'data': [{'racer': 'Max Verstappen'}, {'racer': 'Ayrton Senna'}, {'racer': 'Lewis Hamilton'}, {'racer': 'Michael Schumacher'}, {'racer': 'Juan Manuel Fangio'}, {'racer': 'Alain Prost'}, {'racer': 'Jackie Stewart'}, {'racer': 'Niki Lauda'}, {'racer': 'Fernando Alonso'}, {'racer': 'Oscar Piastri'}]}
+[DIAG] After parse_function_call create_spreadsheet {'title': 'Top 10 F1 Racers', 'data': [{'racer': 'Max Verstappen'}, {'racer': 'Ayrton Senna'}, {'racer': 'Lewis Hamilton'}, {'racer': 'Michael Schumacher'}, {'racer': 'Juan Manuel Fangio'}, {'racer': 'Alain Prost'}, {'racer': 'Jackie Stewart'}, {'racer': 'Niki Lauda'}, {'racer': 'Fernando Alonso'}, {'racer': 'Oscar Piastri'}]}
+[debug] About to call tool: create_spreadsheet with arguments: {'title': 'Top 10 F1 Racers', 'data': [{'racer': 'Max Verstappen'}, {'racer': 'Ayrton Senna'}, {'racer': 'Lewis Hamilton'}, {'racer': 'Michael Schumacher'}, {'racer': 'Juan Manuel Fangio'}, {'racer': 'Alain Prost'}, {'racer': 'Jackie Stewart'}, {'racer': 'Niki Lauda'}, {'racer': 'Fernando Alonso'}, {'racer': 'Oscar Piastri'}]}
+[DIAG] Before mcp.call_tool
+[DIAG] After mcp.call_tool
+[debug] Raw tool response:
+ {'ok': True, 'spreadsheet_id': '17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I', 'link':
+'https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I', 'details': "Spreadsheet 'Top 10
+F1 Racers' created. Data written to spreadsheet."}
+[action] create_spreadsheet →
+ {'ok': True, 'spreadsheet_id': '17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I', 'link':
+'https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I', 'details': "Spreadsheet 'Top 10
+F1 Racers' created. Data written to spreadsheet."}
+[DIAG] Top of step loop 2
+[loop] Step 3 of 3
+[DIAG] Before extract_perception
+[DIAG] After extract_perception
+[DIAG] Before PerceptionResult parse
+[perception] Intent: email spreadsheet , Hint: telegram
+[DIAG] Before memory retrieval
+[memory] Retrieved 3 memories
+[DIAG] Before decide_next_action
+[DIAG] Before prompt construction in generate_plan
+[DIAG] LLM output before log: FUNCTION_CALL: send_email|to_email=sunilks.eminem@gmail.com|subject=Top 10 F1 Racers Spreadsheet|body=Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I
+[16:15:17] [plan] LLM output: FUNCTION_CALL: send_email|to_email=sunilks.eminem@gmail.com|subject=Top 10 F1 Racers Spreadsheet|body=Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I
+[DIAG] After log call in generate_plan
+[plan] FUNCTION_CALL: send_email|to_email=sunilks.eminem@gmail.com|subject=Top 10 F1 Racers Spreadsheet|body=Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I
+[DIAG] Before parse_function_call
+[parser] Parsing value for key 'to_email': sunilks.eminem@gmail.com
+[parser] Parsing value for key 'subject': Top 10 F1 Racers Spreadsheet
+[parser] Parsing value for key 'body': Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I
+[16:15:17] [parser] Parsed: send_email → {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Top 10 F1 Racers Spreadsheet', 'body': 'Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I'}
+[DIAG] After parse_function_call send_email {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Top 10 F1 Racers Spreadsheet', 'body': 'Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I'}
+[debug] About to call tool: send_email with arguments: {'to_email': 'sunilks.eminem@gmail.com', 'subject': 'Top 10 F1 Racers Spreadsheet', 'body': 'Here is the link to the spreadsheet: https://docs.google.com/spreadsheets/d/17YCA9qe2PpEIIxOgTVhYF6_6ccOUA4ia0RIiUAoui4I'}
+[DIAG] Before mcp.call_tool
+[DIAG] After mcp.call_tool
+[debug] Raw tool response:
+ {'ok': True, 'message_id': '1969099c38b878f5', 'details': 'Email sent successfully'}
+[action] send_email →
+ {'ok': True, 'message_id': '1969099c38b878f5', 'details': 'Email sent successfully'}
+[DIAG] Exiting AgentLoop.run
+
+💡 Final Answer:
+ [no result]
+[Sent] Response to chat_id 847206493

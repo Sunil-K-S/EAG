@@ -9,12 +9,13 @@ def log(stage: str, msg: str):
     """Simple timestamped console logger."""
     import datetime
     now = datetime.datetime.now().strftime("%H:%M:%S")
-    print(f"[{now}] [{stage}] {msg}")
+    print("[{}] [{}]".format(now, stage), msg)
 
 
-async def main():
+async def main(user_input=None):
     print("🧠 Cortex-R Agent Ready")
-    user_input = input("🧑 What do you want to solve today? → ")
+    if user_input is None:
+        user_input = input("🧑 What do you want to solve today? → ")
 
     # Load MCP server configs from profiles.yaml
     with open("config/profiles.yaml", "r") as f:
@@ -33,6 +34,7 @@ async def main():
     try:
         final_response = await agent.run()
         print("\n💡 Final Answer:\n", final_response.replace("FINAL_ANSWER:", "").strip())
+        return final_response
 
     except Exception as e:
         log("fatal", f"Agent failed: {e}")
