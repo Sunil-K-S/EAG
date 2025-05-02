@@ -194,8 +194,10 @@ class AgentLoop:
             self.context.final_answer = f"FINAL_ANSWER: [error: {e}]"
 
         print("[DIAG] Exiting AgentLoop.run")
+        # Always set a final answer if missing
         if not self.context.final_answer or self.context.final_answer.strip() in ["FINAL_ANSWER: [no result]", "[no result]", ""]:
             self.context.final_answer = "FINAL_ANSWER: Task completed."
+        print("[DIAG] Final answer before return:", self.context.final_answer)
         return self.context.final_answer or "FINAL_ANSWER: [no result]"
 
 

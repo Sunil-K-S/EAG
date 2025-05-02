@@ -85,7 +85,14 @@ Respond in **exactly one line** using one of the following formats:
 
 - Analyze the user's intent and select the most appropriate tools from the list.
 - Chain multiple tools if needed to accomplish the user's goal.
-- If the user's request can be fulfilled with a single tool, do not add unnecessary steps.
+- If the user's request can be fulfilled with a single tool, do so.
+- If the user requests a top N list (e.g., top 10 F1 racers, top 5 programming languages), always extract or synthesize exactly N items from the available tool outputs. If a single tool output does not contain all N items, combine information from multiple outputs or sources. If you cannot find enough items, explain why in the FINAL_ANSWER. Never return fewer than N items unless it is truly impossible to find more.
+
+---
+
+- Analyze the user's intent and select the most appropriate tools from the list.
+- Chain multiple tools if needed to accomplish the user's goal.
+- If the user's request can be fulfilled with a single tool, do NOT add unnecessary steps.
 - When transforming data between tools (e.g., from search to spreadsheet), extract the relevant fields (e.g., names, URLs) and pass them as arguments. For example, if you get a search result with a list of F1 racers, extract just the racer names for the spreadsheet.
 - Use create_spreadsheet only if the user requests a spreadsheet or tabular data.
 - Use send_email only if the user requests to send information via email.

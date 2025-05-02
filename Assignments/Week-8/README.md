@@ -11,8 +11,8 @@ A robust, multi-layered AI agent platform that can process user requests from CL
 
 ```mermaid
 graph TD
-    A[User (CLI/Telegram)] --> B[Agent Server]
-    B --> C[LLM (Gemini/GPT)]
+    A[User CLI/Telegram] --> B[Agent Server]
+    B --> C[LLM Gemini/GPT]
     B --> D[MCP Server]
     D --> E[Tool Plugins]
     E --> F[Gmail/Drive/Telegram/Other APIs]
